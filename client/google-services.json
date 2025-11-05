@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "115997118343",
+    "project_id": "amora-analytics",
+    "storage_bucket": "amora-analytics.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:115997118343:android:e2024b41b0378b63648d22",
+        "android_client_info": {
+          "package_name": "com.amora.companion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBs4ofLxOfVKZDD-WJmKS2cJhq46MCFEG4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

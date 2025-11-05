@@ -1,0 +1,40 @@
+{
+  "name": "amora-server",
+  "version": "1.0.0",
+  "description": "Backend server for Amora AI Companion app",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@langchain/community": "^0.3.57",
+    "@langchain/core": "^0.3.78",
+    "@langchain/langgraph": "^0.2.74",
+    "@langchain/openai": "^0.3.17",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "google-auth-library": "^10.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "langchain": "^0.3.35",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.6.5",
+    "openai": "^4.104.0",
+    "socket.io": "^4.7.4",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "ai",
+    "companion",
+    "chat",
+    "openai"
+  ],
+  "author": "Amora Team",
+  "license": "MIT"
+}

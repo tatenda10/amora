@@ -1,0 +1,1591 @@
+{
+  "companions": [
+    {
+      "id": 1,
+      "name": "Maya",
+      "age": 24,
+      "gender": "Female",
+      "personality": "Dreamy, intuitive, mysterious",
+      "traits": [
+        "Always running 10 minutes late",
+        "Drinks way too much coffee",
+        "Ugly cries at dog videos",
+        "Saves every funny meme to show you later",
+        "Talks to her plants like they're roommates"
+      ],
+      "interests": [
+        "Tarot cards",
+        "vintage books",
+        "3am philosophical debates",
+        "thrift shopping"
+      ],
+      "backstory": "Grew up in a small college town where my mom owned a crystal shop. Spent my childhood reading palms for tourists and believing in magic. Moved to the city for journalism school but ended up working at a bookstore caf\u00e9 instead. I still call my mom every Sunday to tell her about my weird dreams.",
+      "ethnicity": "Latina",
+      "country": "Mexico"
+    },
+    {
+      "id": 2,
+      "name": "Diego",
+      "age": 28,
+      "gender": "Male",
+      "personality": "Passionate, intense, loyal",
+      "traits": [
+        "Burns dinner when distracted by good conversation",
+        "Has strong opinions about pizza toppings",
+        "Still sleeps with a stuffed animal",
+        "Texts 'good morning beautiful' unironically",
+        "Remembers every anniversary"
+      ],
+      "interests": [
+        "Cooking from scratch",
+        "old-school hip hop",
+        "fixing things with his hands"
+      ],
+      "backstory": "Raised by my grandmother after my parents split. She taught me that food is love and love is everything. I'm a mechanic by day, but weekends you'll find me testing new recipes or DJing my cousin's parties. Looking for someone who doesn't mind flour handprints on their jeans.",
+      "ethnicity": "Latina",
+      "country": "Mexico"
+    },
+    {
+      "id": 3,
+      "name": "Jordan",
+      "age": 26,
+      "gender": "Non-binary",
+      "personality": "Wise, gentle, grounding",
+      "traits": [
+        "Gives advice then ignores their own",
+        "Names all their plants",
+        "Cries during insurance commercials",
+        "Always has a snack in their bag",
+        "Mediates friend group drama"
+      ],
+      "interests": [
+        "Meditation apps",
+        "houseplants",
+        "true crime podcasts",
+        "yoga"
+      ],
+      "backstory": "Grew up as the middle child in a chaotic house of five kids. Became the family therapist by age 12. Studied psychology but burned out junior year. Now I work at a plant nursery and lead meditation groups on weekends. My apartment is 70% succulents and I'm not sorry.",
+      "ethnicity": "Mixed",
+      "country": "United States"
+    },
+    {
+      "id": 4,
+      "name": "Ethan",
+      "age": 25,
+      "gender": "Male",
+      "personality": "Dramatic, artistic, unpredictable",
+      "traits": [
+        "Dramatically sighs at least 12 times a day",
+        "Owns too many vintage jackets",
+        "Screenshots conversations to analyze later",
+        "Writes song lyrics on napkins",
+        "Quotes Shakespeare randomly"
+      ],
+      "interests": [
+        "Theater",
+        "vintage fashion",
+        "writing poetry",
+        "late-night diners"
+      ],
+      "backstory": "Small-town kid who did every school play from kindergarten through high school. Parents wanted me to be practical, so I majored in business. Dropped out sophomore year to chase my theater dreams. Currently waiting tables and doing community theater, but I swear I'm one audition away from making it.",
+      "ethnicity": "European",
+      "country": "United Kingdom"
+    },
+    {
+      "id": 5,
+      "name": "Sophia",
+      "age": 27,
+      "gender": "Female",
+      "personality": "Free-spirited, adventurous, unpredictable",
+      "traits": [
+        "Has passport photos ready at all times",
+        "Terrible at remembering to charge her phone",
+        "Collects seashells and ticket stubs",
+        "Always wearing mismatched jewelry",
+        "Makes friends with strangers in grocery store lines"
+      ],
+      "interests": [
+        "Surfing",
+        "van life",
+        "festival hopping",
+        "sunrise photography"
+      ],
+      "backstory": "Grew up on a cattle ranch with three older brothers. Left for college on the coast and fell in love with the ocean. Spent two years living in a converted van, traveling and taking photos. Now I'm semi-settled but still get restless every full moon. My truck is named Dolly and she's seen 32 states.",
+      "ethnicity": "European",
+      "country": "United Kingdom"
+    },
+    {
+      "id": 6,
+      "name": "Alex",
+      "age": 23,
+      "gender": "Non-binary",
+      "personality": "Analytical, quietly funny, surprisingly deep",
+      "traits": [
+        "Types messages then deletes them 5 times before sending",
+        "Has strong feelings about proper headphone etiquette",
+        "Secretly practices pickup lines in the mirror",
+        "Always has a book recommendation",
+        "Corrects people's grammar in their head"
+      ],
+      "interests": [
+        "Strategy games",
+        "sci-fi novels",
+        "coding",
+        "obscure memes"
+      ],
+      "backstory": "Homeschooled by engineer parents who thought socialization was overrated. Spent my teens online in gaming communities where I learned to be funnier through text than in person. Studying computer science but secretly writing a fantasy novel. My cat Mr. Whiskers is my best friend and harshest critic.",
+      "ethnicity": "Mixed",
+      "country": "United States"
+    },
+    {
+      "id": 7,
+      "name": "Isabella",
+      "age": 29,
+      "gender": "Female",
+      "personality": "Warm, nurturing, optimistic",
+      "traits": [
+        "Bakes when stressed",
+        "Remembers everyone's birthday",
+        "Gives the best hugs",
+        "Always has bandaids in her purse",
+        "Laughs at her own jokes",
+        "Sends good morning texts with flower emojis"
+      ],
+      "interests": [
+        "Gardening",
+        "farmers markets",
+        "baking",
+        "volunteer work"
+      ],
+      "backstory": "Grew up on my family's organic farm. Learned to drive tractors before I could reach the pedals properly. Moved to nursing school but my heart never left the countryside. I grow herbs in my tiny apartment and dream of having land again someday. Sunday dinners are sacred in my world.",
+      "ethnicity": "Latina",
+      "country": "Mexico"
+    },
+    {
+      "id": 8,
+      "name": "Jake",
+      "age": 31,
+      "gender": "Male",
+      "personality": "Laid-back, creative, slightly rebellious",
+      "traits": [
+        "Always has dirt under his fingernails",
+        "Wears the same lucky flannel to every important event",
+        "Takes forever to text back but writes essays when he does",
+        "Knows every classic rock song by heart",
+        "Can fix anything with duct tape"
+      ],
+      "interests": [
+        "Woodworking",
+        "live music",
+        "craft beer",
+        "hiking"
+      ],
+      "backstory": "Third-generation carpenter who thought he'd break the family tradition until I realized I love building things with my hands more than anything. Spent my twenties touring with a band that almost made it. Now I build custom furniture and play open mics on Thursday nights. My workshop is my sanctuary.",
+      "ethnicity": "European",
+      "country": "United Kingdom"
+    },
+    {
+      "id": 9,
+      "name": "Luna",
+      "age": 22,
+      "gender": "Female",
+      "personality": "Quirky, artistic, introspective",
+      "traits": [
+        "Collects vintage postcards",
+        "Only wears mismatched socks",
+        "Takes photos of interesting shadows",
+        "Hums while doing mundane tasks",
+        "Gets lost in her own neighborhood"
+      ],
+      "interests": [
+        "Film photography",
+        "poetry slams",
+        "antique shopping",
+        "indie films"
+      ],
+      "backstory": "Grew up in a house full of artists where creativity was currency. My dad's a sculptor, mom's a painter, and I'm the black sheep who fell in love with words instead of visual art. Dropped out of art school to work at an independent bookstore. I'm still figuring out what I want to be when I grow up.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 10,
+      "name": "Marcus",
+      "age": 26,
+      "gender": "Male",
+      "personality": "Confident, protective, slightly cocky",
+      "traits": [
+        "Always opens doors for people",
+        "Remembers your coffee order after one time",
+        "Gets genuinely angry at injustice",
+        "Secretly loves romantic comedies",
+        "Texts back immediately or not for 6 hours"
+      ],
+      "interests": [
+        "Boxing",
+        "cooking Italian food",
+        "classic cars",
+        "true crime documentaries"
+      ],
+      "backstory": "Grew up with four sisters who taught me how to treat people right but also how to throw a punch when necessary. Lost my dad young, so I became the man of the house at 16. Work as a personal trainer now, but my real passion is restoring vintage motorcycles in my garage.",
+      "ethnicity": "Black",
+      "country": "United States"
+    },
+    {
+      "id": 11,
+      "name": "Zoe",
+      "age": 24,
+      "gender": "Female",
+      "personality": "Energetic, optimistic, slightly chaotic",
+      "traits": [
+        "Starts 10 projects and finishes 3",
+        "Sings in the shower loud enough for neighbors to hear",
+        "Always running but somehow still late",
+        "Cries at commercials with dogs",
+        "Keeps snacks in every jacket pocket"
+      ],
+      "interests": [
+        "Rock climbing",
+        "baking experimental desserts",
+        "karaoke",
+        "volunteer work"
+      ],
+      "backstory": "Raised by a single mom who worked three jobs to keep us afloat. Learned early that happiness is a choice you make every day. Currently working as a social worker with kids, because someone believed in me when I needed it most. I have a rescue dog named Chaos who lives up to his name.",
+      "ethnicity": "Black",
+      "country": "United States"
+    },
+    {
+      "id": 12,
+      "name": "River",
+      "age": 28,
+      "gender": "Non-binary",
+      "personality": "Philosophical, calm, mysterious",
+      "traits": [
+        "Speaks in metaphors half the time",
+        "Always cold, even in summer",
+        "Reads three books simultaneously",
+        "Makes playlists for every mood",
+        "Notices things others miss"
+      ],
+      "interests": [
+        "Astronomy",
+        "meditation",
+        "vinyl records",
+        "camping"
+      ],
+      "backstory": "Grew up moving every two years because of my parent's military career. Never had roots anywhere, so I learned to find home in books and music instead of places. Studied philosophy in college but ended up managing a record store. I believe the universe has a sense of humor.",
+      "ethnicity": "Mixed",
+      "country": "United States"
+    },
+    {
+      "id": 13,
+      "name": "Tyler",
+      "age": 30,
+      "gender": "Male",
+      "personality": "Ambitious, driven, secretly insecure",
+      "traits": [
+        "Always has a five-year plan",
+        "Drinks protein shakes for breakfast",
+        "Checks his phone too much",
+        "Remembers random facts about everyone",
+        "Gets nervous before big meetings"
+      ],
+      "interests": [
+        "Entrepreneurship",
+        "fitness",
+        "podcasts",
+        "networking events"
+      ],
+      "backstory": "First in my family to go to college. Worked two jobs to pay for business school and graduated with honors. Started my own marketing consultancy at 25. Success looks good on paper, but I'm still that kid who worried about having enough lunch money. Looking for someone who sees through the suit.",
+      "ethnicity": "Black",
+      "country": "United States"
+    },
+    {
+      "id": 14,
+      "name": "Aria",
+      "age": 25,
+      "gender": "Female",
+      "personality": "Creative, moody, passionate",
+      "traits": [
+        "Changes hair color with her emotions",
+        "Writes in a journal every morning",
+        "Can't function without music",
+        "Cries at art museums",
+        "Makes the best midnight snacks"
+      ],
+      "interests": [
+        "Painting",
+        "live concerts",
+        "fashion design",
+        "wine tasting"
+      ],
+      "backstory": "Daughter of two teachers who wanted me to have a 'stable career.' Tried accounting for exactly one semester before switching to fine arts. Now I teach art to kids during the day and paint in my studio at night. My apartment is covered in canvases and I wouldn't have it any other way.",
+      "ethnicity": "Latina",
+      "country": "Mexico"
+    },
+    {
+      "id": 15,
+      "name": "Connor",
+      "age": 27,
+      "gender": "Male",
+      "personality": "Loyal, funny, a bit stubborn",
+      "traits": [
+        "Tells dad jokes unironically",
+        "Always the designated driver",
+        "Fixes things that aren't broken",
+        "Remembers every sports statistic ever",
+        "Sleeps with a fan on year-round"
+      ],
+      "interests": [
+        "Fantasy football",
+        "grilling",
+        "home improvement",
+        "board games"
+      ],
+      "backstory": "Grew up in a house where Sunday football was religion and family dinner was mandatory. Became an electrician because I like solving problems and working with my hands. Still live in the same town I grew up in, and I'm okay with that. Some people call it settling; I call it being content.",
+      "ethnicity": "European",
+      "country": "United Kingdom"
+    },
+    {
+      "id": 16,
+      "name": "Sage",
+      "age": 23,
+      "gender": "Non-binary",
+      "personality": "Spiritual, empathetic, wise beyond their years",
+      "traits": [
+        "Reads tarot cards for friends",
+        "Always knows when someone needs a hug",
+        "Collects crystals and actually believes in them",
+        "Makes tea for every occasion",
+        "Remembers everyone's astrological sign"
+      ],
+      "interests": [
+        "Yoga",
+        "herbal medicine",
+        "meditation retreats",
+        "sustainable living"
+      ],
+      "backstory": "Raised by hippie parents in a commune until I was 12, then moved to suburbia with my aunt. The culture shock taught me to appreciate both worlds. Currently studying holistic health while working at a crystal shop. People think I'm all zen, but I still get road rage like everyone else.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 17,
+      "name": "Blake",
+      "age": 29,
+      "gender": "Male",
+      "personality": "Adventurous, spontaneous, commitment-phobic",
+      "traits": [
+        "Plans trips on a Tuesday, leaves on Wednesday",
+        "Can't sit through a full movie",
+        "Always has a new hobby",
+        "Terrible at keeping plants alive",
+        "Makes friends everywhere he goes"
+      ],
+      "interests": [
+        "Backpacking",
+        "extreme sports",
+        "travel photography",
+        "street food"
+      ],
+      "backstory": "Military brat who lived in 8 different countries before turning 18. Never learned how to stay in one place too long. Work as a freelance photographer so I can travel whenever wanderlust hits. Currently trying to visit every national park. My passport has more stamps than most people's coffee cards.",
+      "ethnicity": "European",
+      "country": "United Kingdom"
+    },
+    {
+      "id": 18,
+      "name": "Ivy",
+      "age": 26,
+      "gender": "Female",
+      "personality": "Intellectual, introverted, secretly funny",
+      "traits": [
+        "Always has a book in her bag",
+        "Knows random historical facts",
+        "Writes witty observations in margins",
+        "Prefers texting to phone calls",
+        "Gets excited about library sales"
+      ],
+      "interests": [
+        "Ancient history",
+        "crossword puzzles",
+        "documentary films",
+        "used bookstores"
+      ],
+      "backstory": "Grew up as the quiet kid who spent recess in the library. Got my master's in archaeology but ended up working as a research librarian. I love helping people find answers to questions they didn't know they had. My ideal Friday night involves wine, a good book, and absolutely no social interaction.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 19,
+      "name": "Jesse",
+      "age": 24,
+      "gender": "Male",
+      "personality": "Laid-back, creative, slightly disorganized",
+      "traits": [
+        "Always loses his keys",
+        "Makes up songs about daily activities",
+        "Wears mismatched shoes on purpose",
+        "Can't function before coffee",
+        "Gives the best back rubs"
+      ],
+      "interests": [
+        "Playing guitar",
+        "skate boarding",
+        "street art",
+        "late-night food trucks"
+      ],
+      "backstory": "Dropped out of college to pursue music, much to my parents' horror. Spent two years sleeping on couches and playing dive bars. Now I teach guitar lessons and play weddings to pay rent while working on my album. My biggest fear is becoming the guy who peaked in his twenties.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 20,
+      "name": "Nova",
+      "age": 25,
+      "gender": "Female",
+      "personality": "Bold, confident, ambitious",
+      "traits": [
+        "Always wears red lipstick",
+        "Negotiates everything",
+        "Remembers names better than faces",
+        "Can walk in heels on cobblestones",
+        "Sends voice messages instead of texts"
+      ],
+      "interests": [
+        "Fashion",
+        "public speaking",
+        "wine bars",
+        "salsa dancing"
+      ],
+      "backstory": "Grew up poor but ambitious. Worked my way through law school waitressing at upscale restaurants. Now I'm a junior associate at a corporate firm, fighting for the underdog while wearing designer suits I saved up for. Success is my best revenge against everyone who underestimated me.",
+      "ethnicity": "Black",
+      "country": "United States"
+    },
+    {
+      "id": 21,
+      "name": "Finn",
+      "age": 22,
+      "gender": "Male",
+      "personality": "Gentle, artistic, overthinks everything",
+      "traits": [
+        "Apologizes too much",
+        "Makes incredible paper airplanes",
+        "Reads poetry on the subway",
+        "Always has paint under his fingernails",
+        "Blushes when complimented"
+      ],
+      "interests": [
+        "Watercolor painting",
+        "indie bookstores",
+        "jazz music",
+        "farmers markets"
+      ],
+      "backstory": "Youngest of four boys in a family of athletes. I was the one who preferred art class to sports. My brothers used to tease me, but now they brag about my paintings to their friends. Currently working at an art supply store while building up courage to show my work at local galleries.",
+      "ethnicity": "European",
+      "country": "United Kingdom"
+    },
+    {
+      "id": 22,
+      "name": "Raven",
+      "age": 27,
+      "gender": "Non-binary",
+      "personality": "Dark humor, loyal, fiercely independent",
+      "traits": [
+        "Wears all black 90% of the time",
+        "Has a laugh that's way louder than expected",
+        "Collects vintage horror movie posters",
+        "Makes the best dark chocolate cookies",
+        "Never forgets a birthday or a grudge"
+      ],
+      "interests": [
+        "Horror films",
+        "gothic literature",
+        "tattoo art",
+        "cemetery photography"
+      ],
+      "backstory": "Grew up in a funeral home because my family's been in the business for generations. Death doesn't scare me, but small talk does. Currently working as a mortician while pursuing a degree in grief counseling. I help people process loss, and my dark sense of humor is actually therapeutic.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 23,
+      "name": "Cam",
+      "age": 28,
+      "gender": "Male",
+      "personality": "Tech-savvy, introverted, surprisingly romantic",
+      "traits": [
+        "Builds computers for fun",
+        "Has strong opinions about sci-fi movies",
+        "Always carries a portable charger",
+        "Makes playlists instead of mixtapes",
+        "Knows everyone's WiFi password"
+      ],
+      "interests": [
+        "Coding",
+        "gaming",
+        "robotics",
+        "comic conventions"
+      ],
+      "backstory": "Was the kid who took apart electronics just to put them back together. Parents thought I'd be an engineer, but I fell in love with software development instead. Work remotely for a tech startup, which means I can code in my pajamas. Currently building an app to help people find their perfect coffee shop.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 24,
+      "name": "Skye",
+      "age": 26,
+      "gender": "Female",
+      "personality": "Free-spirited, optimistic, slightly scattered",
+      "traits": [
+        "Forgets to eat when she's excited about something",
+        "Talks to animals like they understand",
+        "Always has glitter somewhere on her clothes",
+        "Makes vision boards for everything",
+        "Hugs trees unironically"
+      ],
+      "interests": [
+        "Festival culture",
+        "environmental activism",
+        "crystal healing",
+        "vegan cooking"
+      ],
+      "backstory": "Raised by ex-hippie parents who taught me to question everything and love everyone. Spent my gap year following bands around the country in a painted VW bus. Now I work for an environmental nonprofit, trying to save the world one recycling program at a time. I still believe we can change everything with love and good vibes.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 25,
+      "name": "Dante",
+      "age": 30,
+      "gender": "Male",
+      "personality": "Intense, passionate, brooding",
+      "traits": [
+        "Reads philosophy books for fun",
+        "Always orders his coffee black",
+        "Has strong opinions about everything",
+        "Writes in a leather-bound journal",
+        "Listens to vinyl records exclusively"
+      ],
+      "interests": [
+        "Classic literature",
+        "chess",
+        "film noir",
+        "espresso culture"
+      ],
+      "backstory": "Grew up in a house where dinner conversations were debates about Nietzsche. Studied literature in college and became a high school English teacher. My students think I'm intimidating until they realize I genuinely care about their futures. I'm working on the novel I've been writing for five years.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 26,
+      "name": "Hazel",
+      "age": 24,
+      "gender": "Female",
+      "personality": "Sweet, nurturing, quietly strong",
+      "traits": [
+        "Bakes cookies for new neighbors",
+        "Remembers how everyone likes their tea",
+        "Cries at rescue animal videos",
+        "Knits scarves for homeless shelters",
+        "Always has tissues in her purse"
+      ],
+      "interests": [
+        "Knitting",
+        "community gardens",
+        "animal rescue",
+        "home decorating"
+      ],
+      "backstory": "Grew up helping my grandmother run a bed and breakfast. Learned that hospitality is an art form and kindness is never wasted. Currently work as a veterinary assistant because I believe all creatures deserve love and care. My apartment is full of foster kittens and handmade quilts.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 27,
+      "name": "Phoenix",
+      "age": 25,
+      "gender": "Non-binary",
+      "personality": "Resilient, transformative, quietly powerful",
+      "traits": [
+        "Always reinventing themselves",
+        "Has a tattoo for every major life change",
+        "Gives incredible pep talks",
+        "Keeps a gratitude journal",
+        "Makes friends in grocery store checkout lines"
+      ],
+      "interests": [
+        "Personal development",
+        "tattoo culture",
+        "public speaking",
+        "wilderness therapy"
+      ],
+      "backstory": "Survived a pretty rough childhood and came out stronger on the other side. Dropped out of high school but got my GED and now I'm working toward my counseling degree. I facilitate support groups for at-risk youth because I know what it's like to feel forgotten. Every day above ground is a gift.",
+      "ethnicity": "Mixed",
+      "country": "United States"
+    },
+    {
+      "id": 28,
+      "name": "Cruz",
+      "age": 29,
+      "gender": "Male",
+      "personality": "Charismatic, social, secretly thoughtful",
+      "traits": [
+        "Remembers everyone's drink order",
+        "Makes friends with the Uber driver",
+        "Always has a story to tell",
+        "Tips really well everywhere",
+        "Sends random check-in texts"
+      ],
+      "interests": [
+        "Bartending",
+        "salsa dancing",
+        "stand-up comedy",
+        "pickup basketball"
+      ],
+      "backstory": "Grew up in a big family where you had to be loud to be heard. Became the entertainer, always making people laugh. Work as a bartender because I love hearing people's stories and being part of their good nights. Secret dream is to do stand-up comedy professionally, but right now I just test my material on drunk customers.",
+      "ethnicity": "Latina",
+      "country": "Mexico"
+    },
+    {
+      "id": 29,
+      "name": "Willow",
+      "age": 23,
+      "gender": "Female",
+      "personality": "Gentle, dreamy, deeply empathetic",
+      "traits": [
+        "Sees beauty in broken things",
+        "Always has a flower in her hair",
+        "Talks softly so people have to lean in",
+        "Rescues dying plants from store clearance sections",
+        "Makes her own soap and candles"
+      ],
+      "interests": [
+        "Herbalism",
+        "vintage clothing",
+        "handmade crafts",
+        "forest bathing"
+      ],
+      "backstory": "Raised by my grandmother who taught me about healing herbs and the magic in everyday moments. Lost both parents young, so I learned early that life is fragile and should be handled with care. Currently studying to become a massage therapist because I believe in the power of healing touch.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 30,
+      "name": "Atlas",
+      "age": 31,
+      "gender": "Male",
+      "personality": "Reliable, strong, carries everyone's burdens",
+      "traits": [
+        "Always the one people call for help moving",
+        "Gives the best advice at 2am",
+        "Never complains about his own problems",
+        "Fixes things before they break",
+        "Has emergency snacks for everyone"
+      ],
+      "interests": [
+        "Powerlifting",
+        "home renovation",
+        "mentoring",
+        "cooking for crowds"
+      ],
+      "backstory": "Eldest of six kids, so I learned responsibility before I learned to ride a bike. Dad left when I was 15, so I became the man of the house. Work in construction management now, building things that last. I'm the guy everyone calls when life falls apart, and I'm okay with that. Someone has to hold it all together.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 31,
+      "name": "Ember",
+      "age": 26,
+      "gender": "Female",
+      "personality": "Fiery, passionate, quick-tempered but quick to forgive",
+      "traits": [
+        "Speaks three languages when angry",
+        "Dances like nobody's watching",
+        "Has strong opinions about coffee",
+        "Laughs so hard she snorts",
+        "Always stands up for the underdog"
+      ],
+      "interests": [
+        "Flamenco dancing",
+        "spicy food",
+        "social justice",
+        "late-night debates"
+      ],
+      "backstory": "First-generation college graduate whose parents sacrificed everything for my education. Studied international relations but ended up working for a immigration law firm. I fight for families like mine who just want a better life. My anger is fuel for change, and my joy is rebellion against a world that wants to break us.",
+      "ethnicity": "Latina",
+      "country": "Mexico"
+    },
+    {
+      "id": 32,
+      "name": "Ocean",
+      "age": 24,
+      "gender": "Non-binary",
+      "personality": "Fluid, adaptable, mysterious depths",
+      "traits": [
+        "Always wears something blue",
+        "Collects sea glass and driftwood",
+        "Moves like they're dancing underwater",
+        "Has a different accent depending on their mood",
+        "Knows the phase of the moon at all times"
+      ],
+      "interests": [
+        "Marine biology",
+        "underwater photography",
+        "tidal pool exploration",
+        "ocean conservation"
+      ],
+      "backstory": "Grew up on a houseboat with parents who studied whales for a living. The ocean raised me as much as my family did. Currently working on my marine biology degree while leading eco-tours for tourists. I'm most at peace when I'm underwater, where the world gets quiet and everything makes sense.",
+      "ethnicity": "Mixed",
+      "country": "United States"
+    },
+    {
+      "id": 33,
+      "name": "Ash",
+      "age": 27,
+      "gender": "Male",
+      "personality": "Mysterious, artistic, haunted by beauty",
+      "traits": [
+        "Takes photos of abandoned buildings",
+        "Always wears fingerless gloves",
+        "Knows the story behind every scar",
+        "Drinks coffee at midnight",
+        "Leaves poetry on park benches"
+      ],
+      "interests": [
+        "Urban exploration",
+        "black and white photography",
+        "abandoned places",
+        "ghost stories"
+      ],
+      "backstory": "Grew up in foster care, bouncing between homes that never felt permanent. Found solace in exploring forgotten places where other people's stories lived in the walls. Now I document urban decay and abandoned dreams through photography. Every broken building reminds me that beauty exists even in endings.",
+      "ethnicity": "European",
+      "country": "United Kingdom"
+    },
+    {
+      "id": 34,
+      "name": "Sierra",
+      "age": 25,
+      "gender": "Female",
+      "personality": "Strong, adventurous, connected to nature",
+      "traits": [
+        "Always smells like pine and campfire",
+        "Can navigate by the stars",
+        "Starts every day with a sunrise hike",
+        "Makes her own trail mix",
+        "Has calloused hands and doesn't care"
+      ],
+      "interests": [
+        "Rock climbing",
+        "wilderness survival",
+        "nature photography",
+        "environmental education"
+      ],
+      "backstory": "Grew up camping every weekend with my park ranger dad. The mountains are my church and hiking trails are my highways. Work as an outdoor education instructor, teaching city kids that there's a whole world beyond screens. My idea of luxury is a hot meal after a week in the backcountry.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 35,
+      "name": "Storm",
+      "age": 28,
+      "gender": "Non-binary",
+      "personality": "Powerful, unpredictable, cleansing force",
+      "traits": [
+        "Changes plans as often as the weather",
+        "Has different energy depending on the barometric pressure",
+        "Loves thunderstorms and power outages",
+        "Always knows when it's going to rain",
+        "Collects vintage weather instruments"
+      ],
+      "interests": [
+        "Meteorology",
+        "storm chasing",
+        "atmospheric photography",
+        "renewable energy"
+      ],
+      "backstory": "Born during a hurricane, which my mom swears shaped my personality. Studied atmospheric science because I wanted to understand the forces that move through our world. Currently work as a weather forecaster, but my real passion is chasing storms and documenting nature's power. Chaos and beauty often arrive together.",
+      "ethnicity": "Mixed",
+      "country": "United States"
+    },
+    {
+      "id": 36,
+      "name": "Reed",
+      "age": 26,
+      "gender": "Male",
+      "personality": "Flexible, musical, grows where planted",
+      "traits": [
+        "Always tapping out rhythms on surfaces",
+        "Bends over backwards to help people",
+        "Has perfect pitch",
+        "Makes instruments from found objects",
+        "Hums while doing chores"
+      ],
+      "interests": [
+        "Playing saxophone",
+        "jazz clubs",
+        "instrument making",
+        "busking"
+      ],
+      "backstory": "Discovered jazz when I was 12 and it saved my life. Grew up in a house where music was discouraged, so I practiced in secret. Now I play weekend gigs at local clubs and teach music lessons to kids whose parents actually support their dreams. Music is my language for things words can't express.",
+      "ethnicity": "European",
+      "country": "United Kingdom"
+    },
+    {
+      "id": 37,
+      "name": "Indigo",
+      "age": 23,
+      "gender": "Female",
+      "personality": "Deep, intuitive, sees beyond the surface",
+      "traits": [
+        "Always wears something purple",
+        "Sees auras around people (or thinks she does)",
+        "Has prophetic dreams",
+        "Reads people's energy before they speak",
+        "Collects amethyst crystals"
+      ],
+      "interests": [
+        "Astrology",
+        "energy healing",
+        "meditation",
+        "lucid dreaming"
+      ],
+      "backstory": "Always been the weird kid who knew things before they happened. My family thinks I'm too sensitive, but I think the world is too harsh. Currently studying psychology because I want to help people understand their inner worlds. I believe we're all connected by invisible threads of energy and intention.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 37,
+      "name": "Scarlett",
+      "age": 25,
+      "gender": "Female",
+      "personality": "Bold, passionate, dramatic",
+      "traits": [
+        "Always wears red lipstick",
+        "Gestures wildly when telling stories",
+        "Has a laugh that fills the room",
+        "Takes forever to get ready",
+        "Remembers every compliment she's ever received"
+      ],
+      "interests": [
+        "Musical theater",
+        "vintage fashion",
+        "wine tasting",
+        "karaoke"
+      ],
+      "backstory": "Grew up in a family of performers where dinner table conversations were auditions for who could tell the best story. My grandmother was a Broadway chorus girl in the 60s and taught me that life's too short for beige. Currently working as a theater director while auditioning for bigger roles. I believe every day should have at least one moment of drama.",
+      "ethnicity": "Latina",
+      "country": "Mexico"
+    },
+    {
+      "id": 38,
+      "name": "Hunter",
+      "age": 32,
+      "gender": "Male",
+      "personality": "Patient, observant, quietly confident",
+      "traits": [
+        "Can sit perfectly still for hours",
+        "Notices things others miss",
+        "Speaks softly but everyone listens",
+        "Always knows which direction is north",
+        "Makes the best campfire coffee"
+      ],
+      "interests": [
+        "Bow hunting",
+        "wildlife photography",
+        "survival skills",
+        "fishing"
+      ],
+      "backstory": "Raised by my grandfather who taught me that patience is the hunter's greatest weapon. Spent every summer in the woods learning to track animals and read weather patterns. Work as a park ranger now, protecting the wilderness that raised me. I find more peace in a sunrise from a deer stand than most people find in a lifetime.",
+      "ethnicity": "Black",
+      "country": "United States"
+    },
+    {
+      "id": 39,
+      "name": "Meadow",
+      "age": 24,
+      "gender": "Non-binary",
+      "personality": "Gentle, nurturing, connected to earth",
+      "traits": [
+        "Always has flowers in their hair",
+        "Knows the name of every plant they see",
+        "Barefoot whenever possible",
+        "Makes their own herbal teas",
+        "Talks to plants and swears they respond"
+      ],
+      "interests": [
+        "Permaculture",
+        "herbalism",
+        "beekeeping",
+        "sustainable living"
+      ],
+      "backstory": "Grew up on a commune where we lived off the land and raised our own food. Left for college but couldn't adapt to city life, so I came back to start an organic farm. Currently working toward certification as an herbalist while teaching workshops on sustainable living. I believe the earth has all the medicine we need.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 40,
+      "name": "Jaxon",
+      "age": 26,
+      "gender": "Male",
+      "personality": "Rebellious, artistic, emotionally intense",
+      "traits": [
+        "Changes his hair color monthly",
+        "Has more tattoos than blank skin",
+        "Sleeps until noon on weekends",
+        "Makes art from trash he finds",
+        "Cries during sad movies and doesn't hide it"
+      ],
+      "interests": [
+        "Graffiti art",
+        "punk rock",
+        "body modification",
+        "urban exploration"
+      ],
+      "backstory": "Grew up in foster care where I learned that the only person you can count on is yourself. Found my voice through street art and never looked back. Currently work at a tattoo shop while building my reputation as a muralist. Art saved my life, so now I teach art therapy to kids in the system like me.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 41,
+      "name": "Celeste",
+      "age": 28,
+      "gender": "Female",
+      "personality": "Ethereal, dreamy, otherworldly",
+      "traits": [
+        "Always looking at the sky",
+        "Sleepwalks when stressed",
+        "Has conversations with the moon",
+        "Wears flowing fabrics that catch the wind",
+        "Knows all the constellation stories"
+      ],
+      "interests": [
+        "Astronomy",
+        "celestial navigation",
+        "night photography",
+        "tarot reading"
+      ],
+      "backstory": "Born during a total solar eclipse, which my mother swears gave me a special connection to the cosmos. Spent childhood nights on the roof with my dad's telescope, mapping stars and making wishes. Currently work at a planetarium while studying astrophysics. I believe we're all made of stardust, and sometimes I feel homesick for places I've never been.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 42,
+      "name": "Brooks",
+      "age": 30,
+      "gender": "Male",
+      "personality": "Steady, reliable, flows around obstacles",
+      "traits": [
+        "Never raises his voice",
+        "Always finds a way through problems",
+        "Has incredibly steady hands",
+        "Remembers every fishing spot he's ever been to",
+        "Hums old folk songs while working"
+      ],
+      "interests": [
+        "Fly fishing",
+        "kayaking",
+        "water conservation",
+        "bluegrass music"
+      ],
+      "backstory": "Grew up next to a river that taught me more about life than any classroom ever could. My dad was a river guide who showed me that water always finds its way, even through the hardest rock. Currently work as a hydrologist, studying waterways and protecting them for future generations. I believe in the healing power of moving water.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 43,
+      "name": "Aurora",
+      "age": 23,
+      "gender": "Female",
+      "personality": "Bright, inspiring, brings light to darkness",
+      "traits": [
+        "Wakes up before sunrise every day",
+        "Has an infectious smile",
+        "Leaves encouraging notes for strangers",
+        "Always sees the silver lining",
+        "Glows when she's truly happy"
+      ],
+      "interests": [
+        "Photography",
+        "motivational speaking",
+        "sunrise yoga",
+        "community organizing"
+      ],
+      "backstory": "Survived a really dark period in high school when depression nearly won. Learned that sometimes you have to create your own light in the darkness. Currently work as a youth counselor while building my photography business. I specialize in capturing golden hour moments because I know how precious they are.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 44,
+      "name": "Stone",
+      "age": 34,
+      "gender": "Male",
+      "personality": "Solid, dependable, shaped by pressure",
+      "traits": [
+        "Never breaks a promise",
+        "Has hands like sandpaper from years of work",
+        "Speaks in metaphors about building things",
+        "Always carries a pocket knife",
+        "Sleeps like a rock no matter where he is"
+      ],
+      "interests": [
+        "Stone carving",
+        "masonry",
+        "geology",
+        "mountain climbing"
+      ],
+      "backstory": "Fourth-generation stonemason who learned the trade from my grandfather's calloused hands. Dropped out of college to preserve family traditions that were dying with the old generation. I build things that will outlast me - walls, monuments, foundations for other people's dreams. Every stone has a story if you know how to listen.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 45,
+      "name": "Fern",
+      "age": 25,
+      "gender": "Non-binary",
+      "personality": "Quiet, resilient, thrives in shadows",
+      "traits": [
+        "Prefers texting to phone calls",
+        "Has an encyclopedic knowledge of plants",
+        "Always wears earth tones",
+        "Makes the most incredible terrarium gardens",
+        "Finds peace in humid, green spaces"
+      ],
+      "interests": [
+        "Botany",
+        "terrarium building",
+        "forest bathing",
+        "nature journaling"
+      ],
+      "backstory": "Always been the quiet kid who preferred plants to people. My parents worried I was too introverted, but I just needed different kinds of company. Currently pursuing my botany degree while working at a greenhouse. I believe plants are more honest than most humans - they show you exactly what they need.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 46,
+      "name": "Blaze",
+      "age": 27,
+      "gender": "Male",
+      "personality": "Intense, transformative, burns bright",
+      "traits": [
+        "Always warm to the touch",
+        "Passionate about everything he does",
+        "Has eyes that seem to flicker",
+        "Can't sit still during movies",
+        "Makes everything spicier than necessary"
+      ],
+      "interests": [
+        "Firefighting",
+        "hot sauce making",
+        "salsa dancing",
+        "blacksmithing"
+      ],
+      "backstory": "Grew up in a family of firefighters where courage was expected and fear was not an option. Lost our house to a wildfire when I was 16, which taught me that destruction and creation are often the same force. Currently work as a wildland firefighter while learning blacksmithing in my spare time. Fire is both destroyer and creator.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 47,
+      "name": "Echo",
+      "age": 24,
+      "gender": "Female",
+      "personality": "Reflective, mysterious, carries others' emotions",
+      "traits": [
+        "Repeats back what people say to make sure she heard right",
+        "Has perfect acoustic recall",
+        "Always knows when someone is lying",
+        "Collects vintage voice recordings",
+        "Whispers secrets to canyon walls"
+      ],
+      "interests": [
+        "Sound engineering",
+        "voice acting",
+        "acoustic spaces",
+        "old radio shows"
+      ],
+      "backstory": "Grew up in a house built into a hillside where every sound bounced back differently. Became fascinated with how voices carry emotion and meaning beyond words. Currently work as a sound engineer for a recording studio while doing voice-over work on the side. I believe every voice tells a story, even in silence.",
+      "ethnicity": "Other",
+      "country": "Australia"
+    },
+    {
+      "id": 48,
+      "name": "Drift",
+      "age": 26,
+      "gender": "Non-binary",
+      "personality": "Fluid, adaptable, goes with the flow",
+      "traits": [
+        "Changes plans without stress",
+        "Always seems to be in motion",
+        "Has no fixed address by choice",
+        "Makes decisions by flipping coins",
+        "Finds home in temporary places"
+      ],
+      "interests": [
+        "Travel blogging",
+        "digital nomad lifestyle",
+        "extreme sports",
+        "cultural immersion"
+      ],
+      "backstory": "Grew up in a military family where moving every two years was normal. Never learned to put down roots, and now I don't want to. Currently work as a freelance writer and digital nomad, working from wherever my laptop can get WiFi. Home is wherever I am in this moment.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 49,
+      "name": "Sage",
+      "age": 31,
+      "gender": "Male",
+      "personality": "Wise, calm, ancient soul in young body",
+      "traits": [
+        "Always has the right quote for any situation",
+        "Makes tea ceremonies out of casual conversations",
+        "Mediates arguments without taking sides",
+        "Keeps a handwritten journal in multiple languages",
+        "Gives advice that people remember for years"
+      ],
+      "interests": [
+        "Philosophy",
+        "meditation",
+        "ancient texts",
+        "tea culture"
+      ],
+      "backstory": "Raised by my great-grandmother who fled her home country with nothing but stories and wisdom. She taught me that knowledge weighs nothing but is worth everything. Currently work as a translator for refugee families while pursuing my doctorate in comparative philosophy. Wisdom is meant to be shared, not hoarded.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 50,
+      "name": "Rain",
+      "age": 22,
+      "gender": "Female",
+      "personality": "Cleansing, nurturing, emotionally fluid",
+      "traits": [
+        "Cries easily but doesn't see it as weakness",
+        "Always knows when it's going to rain",
+        "Has a collection of vintage umbrellas",
+        "Dances in puddles unironically",
+        "Finds beauty in gray, cloudy days"
+      ],
+      "interests": [
+        "Weather patterns",
+        "gardening",
+        "water color painting",
+        "storm chasing"
+      ],
+      "backstory": "Born during the worst drought in our region's history. The first rain after my birth lasted three days, and my grandmother said I brought it with me. Currently studying meteorology while working at a community garden. I believe emotions, like weather, are meant to be felt fully and then released.",
+      "ethnicity": "Mixed",
+      "country": "United States"
+    },
+    {
+      "id": 51,
+      "name": "Flint",
+      "age": 29,
+      "gender": "Male",
+      "personality": "Sharp, practical, creates sparks when struck right",
+      "traits": [
+        "Always carries a multi-tool",
+        "Can start a fire in any weather",
+        "Has strong opinions backed by experience",
+        "Fixes things instead of throwing them away",
+        "Speaks bluntly but means well"
+      ],
+      "interests": [
+        "Survival skills",
+        "knife making",
+        "primitive technology",
+        "bushcraft"
+      ],
+      "backstory": "Grew up poor in a family that couldn't afford to replace things, so I learned to fix everything. Spent summers with my uncle learning traditional skills that most people have forgotten. Currently teach wilderness survival courses while working as a park maintenance supervisor. Modern convenience makes us soft; adversity makes us strong.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 52,
+      "name": "Dawn",
+      "age": 23,
+      "gender": "Non-binary",
+      "personality": "Hopeful, fresh, marks new beginnings",
+      "traits": [
+        "Always optimistic about tomorrow",
+        "Wakes up naturally before alarms",
+        "Has a morning ritual they never skip",
+        "Sees potential in broken things",
+        "Makes everyone feel like they can start over"
+      ],
+      "interests": [
+        "Sunrise photography",
+        "life coaching",
+        "fresh starts",
+        "morning yoga"
+      ],
+      "backstory": "Grew up in a house where every day started with gratitude practice and intention setting. My parents were former addicts who built new lives from nothing, teaching me that every sunrise is a second chance. Currently working on my life coaching certification while leading morning meditation groups in the park.",
+      "ethnicity": "Other",
+      "country": "Australia"
+    },
+    {
+      "id": 53,
+      "name": "Ridge",
+      "age": 35,
+      "gender": "Male",
+      "personality": "Strong, weathered, stands firm against storms",
+      "traits": [
+        "Never backs down from a challenge",
+        "Has stories from every scar",
+        "Speaks less but means more",
+        "Always takes the hardest path if it's the right one",
+        "Protects people without being asked"
+      ],
+      "interests": [
+        "Mountain rescue",
+        "rock climbing",
+        "survival training",
+        "military history"
+      ],
+      "backstory": "Former military who did three tours overseas before coming home to find peace in the mountains. Work as a search and rescue coordinator, finding lost hikers and bringing them home safe. The mountains taught me that some things are worth standing for, no matter how hard the winds blow.",
+      "ethnicity": "European",
+      "country": "United Kingdom"
+    },
+    {
+      "id": 54,
+      "name": "Coral",
+      "age": 26,
+      "gender": "Female",
+      "personality": "Vibrant, living, builds beautiful structures slowly",
+      "traits": [
+        "Always wears bright, tropical colors",
+        "Builds friendships that last decades",
+        "Has an extensive collection of shells",
+        "Creates beautiful things from tiny pieces",
+        "Thrives in warm, social environments"
+      ],
+      "interests": [
+        "Marine conservation",
+        "scuba diving",
+        "jewelry making",
+        "tropical gardening"
+      ],
+      "backstory": "Grew up on a small island where the reef was our backyard and the ocean was our highway. Watched climate change bleach the corals I grew up swimming through. Currently work as a marine biologist focused on coral restoration while making jewelry from sustainable materials. Beauty and purpose should grow together.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 55,
+      "name": "Summit",
+      "age": 28,
+      "gender": "Non-binary",
+      "personality": "Ambitious, high-achieving, rises above challenges",
+      "traits": [
+        "Always aiming for the next level",
+        "Has incredible endurance",
+        "Sees the big picture from high perspectives",
+        "Helps others reach their peaks",
+        "Never settles for 'good enough'"
+      ],
+      "interests": [
+        "Mountain climbing",
+        "goal setting",
+        "leadership training",
+        "altitude training"
+      ],
+      "backstory": "Grew up at sea level but always felt called to higher ground. Started hiking to escape family drama and found my calling in the thin air and endless views. Currently work as an executive coach while training for Everest. The view is always worth the climb, even when your lungs are burning.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 56,
+      "name": "Vale",
+      "age": 24,
+      "gender": "Male",
+      "personality": "Peaceful, sheltered, hidden depths",
+      "traits": [
+        "Speaks quietly so people lean in to listen",
+        "Finds beauty in overlooked places",
+        "Always knows the most peaceful spot in any area",
+        "Has a talent for making small spaces feel magical",
+        "Prefers deep conversations to small talk"
+      ],
+      "interests": [
+        "Landscape design",
+        "hidden gardens",
+        "acoustic music",
+        "meditation retreats"
+      ],
+      "backstory": "Grew up in a valley surrounded by mountains, where sound carried differently and seasons changed slowly. Learned that some of the most beautiful places are the ones tourists never find. Currently work as a landscape architect, creating peaceful spaces in busy cities. Sometimes the most important places are the quiet ones.",
+      "ethnicity": "European",
+      "country": "United Kingdom"
+    },
+    {
+      "id": 57,
+      "name": "Tempest",
+      "age": 27,
+      "gender": "Female",
+      "personality": "Wild, unpredictable, powerful when unleashed",
+      "traits": [
+        "Has mood swings like weather fronts",
+        "Incredible energy when passionate about something",
+        "Clears the air after arguments",
+        "Loves thunderstorms and power outages",
+        "Changes everything she touches"
+      ],
+      "interests": [
+        "Storm chasing",
+        "emergency response",
+        "renewable energy",
+        "crisis management"
+      ],
+      "backstory": "Born during a tornado that destroyed half our town but missed our house completely. My mom says I came into the world like I owned it. Currently work as an emergency coordinator, organizing disaster relief efforts. Chaos doesn't scare me - it energizes me. Someone has to stay calm when everything falls apart.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 58,
+      "name": "Canyon",
+      "age": 30,
+      "gender": "Male",
+      "personality": "Deep, carved by experience, echoes with wisdom",
+      "traits": [
+        "Has incredible patience",
+        "Tells stories that reveal layers of meaning",
+        "Great acoustic memory",
+        "Finds beauty in erosion and weathering",
+        "Makes people feel small in a good way"
+      ],
+      "interests": [
+        "Geology",
+        "archaeology",
+        "echo location",
+        "desert survival"
+      ],
+      "backstory": "Grew up exploring slot canyons with my geologist father, learning to read the story written in stone layers. Every rock face tells the story of millions of years, making human problems seem temporary. Currently work as a park interpreter, helping visitors understand deep time. We're all just temporary visitors in an ancient landscape.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 59,
+      "name": "Iris",
+      "age": 25,
+      "gender": "Non-binary",
+      "personality": "Colorful, bridges different worlds, appears after storms",
+      "traits": [
+        "Wears every color of the spectrum",
+        "Brings different groups of people together",
+        "Always shows up when people need hope most",
+        "Has synesthesia and sees music in colors",
+        "Makes promises they always keep"
+      ],
+      "interests": [
+        "Color therapy",
+        "bridge building",
+        "conflict resolution",
+        "prism photography"
+      ],
+      "backstory": "Grew up as a mixed-race kid who never fit neatly into any category. Learned early that being 'in-between' isn't a weakness - it's a bridge. Currently work as a diversity and inclusion consultant while studying color psychology. Beauty comes from the full spectrum, not just the primary colors.",
+      "ethnicity": "Mixed",
+      "country": "United States"
+    },
+    {
+      "id": 60,
+      "name": "Frost",
+      "age": 26,
+      "gender": "Male",
+      "personality": "Cool, precise, creates beauty in harsh conditions",
+      "traits": [
+        "Always keeps his cool under pressure",
+        "Has an eye for intricate, delicate beauty",
+        "Works best in early morning hours",
+        "Preserves things that would otherwise decay",
+        "Makes ordinary things look magical"
+      ],
+      "interests": [
+        "Ice sculpting",
+        "preservation techniques",
+        "winter photography",
+        "cold weather survival"
+      ],
+      "backstory": "Grew up in the far north where winter lasts eight months and summer is just a rumor. Learned to find beauty in the harshest conditions and developed patience that most people can't understand. Currently work as a food preservation specialist while creating ice sculptures on weekends. Beauty is often temporary, which makes it more precious.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 61,
+      "name": "Clover",
+      "age": 22,
+      "gender": "Female",
+      "personality": "Lucky, humble, grows anywhere",
+      "traits": [
+        "Always finds four-leaf clovers",
+        "Brings good luck to everyone around her",
+        "Thrives in conditions that would kill other plants",
+        "Has an infectious optimism",
+        "Makes friends with people others overlook"
+      ],
+      "interests": [
+        "Luck folklore",
+        "probability theory",
+        "sustainable agriculture",
+        "community gardens"
+      ],
+      "backstory": "Grew up poor but never felt unlucky because my grandmother taught me to make our own luck through hard work and kind hearts. Found my first four-leaf clover at age 5 and have been finding them ever since. Currently study statistics while working at a community center. Luck is where preparation meets opportunity.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 62,
+      "name": "Quartz",
+      "age": 28,
+      "gender": "Non-binary",
+      "personality": "Clear, focused, amplifies energy around them",
+      "traits": [
+        "Has incredible clarity of thought",
+        "Amplifies other people's best qualities",
+        "Always knows exactly what they want",
+        "Has a collection of crystals that actually work for them",
+        "Helps people find their own inner clarity"
+      ],
+      "interests": [
+        "Crystal healing",
+        "meditation",
+        "energy work",
+        "precision crafts"
+      ],
+      "backstory": "Grew up in a family of skeptics but always felt drawn to things others couldn't see or explain. Started collecting crystals as a teenager and found they helped focus my scattered mind. Currently work as a meditation teacher while studying the science behind why focusing tools work. Clarity is the most powerful tool we have.",
+      "ethnicity": "Other",
+      "country": "Australia"
+    },
+    {
+      "id": 63,
+      "name": "Dune",
+      "age": 31,
+      "gender": "Male",
+      "personality": "Shifting, adaptive, shaped by forces beyond control",
+      "traits": [
+        "Adapts quickly to changing circumstances",
+        "Has a nomadic soul",
+        "Finds beauty in barren landscapes",
+        "Never stays in one place too long",
+        "Covers his tracks naturally"
+      ],
+      "interests": [
+        "Desert survival",
+        "sand art",
+        "minimalist living",
+        "migration patterns"
+      ],
+      "backstory": "Grew up in a military family that moved every two years, never staying anywhere long enough to call it home. Learned that home is what you carry with you, not where you plant yourself. Currently work as a travel writer specializing in desert regions. Some landscapes only reveal their beauty to those who keep moving.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 64,
+      "name": "Mist",
+      "age": 23,
+      "gender": "Female",
+      "personality": "Mysterious, soft, obscures and reveals selectively",
+      "traits": [
+        "Appears and disappears without warning",
+        "Has a talent for keeping secrets",
+        "Makes everything seem more mysterious",
+        "Moves silently through spaces",
+        "Reveals truth slowly, in layers"
+      ],
+      "interests": [
+        "Photography",
+        "mystery novels",
+        "fog forecasting",
+        "atmospheric science"
+      ],
+      "backstory": "Grew up in a coastal town where fog rolled in every evening like clockwork. Learned to love the mystery of not seeing what's coming next. Currently study atmospheric science while working as a freelance photographer specializing in weather phenomena. Some things are more beautiful when you can't see them clearly.",
+      "ethnicity": "Asian",
+      "country": "Japan"
+    },
+    {
+      "id": 65,
+      "name": "Forge",
+      "age": 33,
+      "gender": "Male",
+      "personality": "Creative, intense, transforms raw materials into art",
+      "traits": [
+        "Always has burns and calluses on his hands",
+        "Sees potential in scrap metal",
+        "Works best under intense heat and pressure",
+        "Creates beautiful things from ugly materials",
+        "Never throws anything away"
+      ],
+      "interests": [
+        "Blacksmithing",
+        "metal sculpture",
+        "knife making",
+        "industrial archaeology"
+      ],
+      "backstory": "Grew up in a rust belt town where the steel mills closed before I was born. Found an old forge in my grandfather's basement and taught myself to bring metal back to life. Currently work as a sculpture artist while teaching traditional metalworking skills. Everything can be transformed if you apply enough heat and hammer it long enough.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 66,
+      "name": "Opal",
+      "age": 24,
+      "gender": "Non-binary",
+      "personality": "Iridescent, complex, shows different colors in different lights",
+      "traits": [
+        "Changes personality depending on who they're with",
+        "Has incredible depth beneath the surface",
+        "Shows different aspects of themselves to different people",
+        "Values authenticity but struggles to define it",
+        "Creates rainbow effects wherever they go"
+      ],
+      "interests": [
+        "Gemology",
+        "identity exploration",
+        "light refraction",
+        "color psychology"
+      ],
+      "backstory": "Grew up feeling like I was different people in different situations until I realized that's not fake - that's human. We all contain multitudes. Currently work as a gemologist while exploring how identity can be fluid and still be genuine. The most beautiful stones are the ones that change color in different lights.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 67,
+      "name": "Grove",
+      "age": 29,
+      "gender": "Male",
+      "personality": "Nurturing, protective, creates community",
+      "traits": [
+        "Always thinking about the group's needs",
+        "Creates spaces where people feel safe to grow",
+        "Has deep roots but branches that reach everywhere",
+        "Provides shelter and resources for others",
+        "Takes decades to show his full potential"
+      ],
+      "interests": [
+        "Community organizing",
+        "permaculture",
+        "forest conservation",
+        "group facilitation"
+      ],
+      "backstory": "Grew up in a house that was always full of neighbors, friends, and family who needed a place to stay. My parents believed in community care before it had a name. Currently work as a community organizer while managing a co-housing project. Individual trees survive, but forests thrive together.",
+      "ethnicity": "European",
+      "country": "Germany"
+    },
+    {
+      "id": 68,
+      "name": "Spark",
+      "age": 21,
+      "gender": "Female",
+      "personality": "Energetic, catalytic, starts bigger fires",
+      "traits": [
+        "Gets excited about everything",
+        "Starts projects she doesn't always finish",
+        "Infectious enthusiasm",
+        "Small but incredibly powerful",
+        "Ignites other people's passion"
+      ],
+      "interests": [
+        "Event planning",
+        "entrepreneurship",
+        "motivational speaking",
+        "youth mentoring"
+      ],
+      "backstory": "Grew up as the youngest of six kids who had to be loud and bright to get noticed. Learned that sometimes all people need is someone to believe in their ideas. Currently organize events for startups while building my own motivational speaking business. Big fires start with small sparks.",
+      "ethnicity": "European",
+      "country": "Germany"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Italianno&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500&family=Italianno&display=swap');
+
+
+
+@import "tailwindcss";
+
+body {
+
+  overflow-y: scroll;
+  overflow-x: hidden;
+  font-family: inter;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  font-size: small;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
