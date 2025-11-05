@@ -28,5 +28,11 @@ server/datasets/
 # Server env files
 server/.env
 
+# Google Cloud / Firebase Service Account credentials
+**/*firebase-adminsdk*.json
+**/*service-account*.json
+**/*gcloud*.json
+client/amora-analytics-firebase-adminsdk*.json
+
 
 
