@@ -41,3 +41,4 @@ yarn-error.*
 **/*service-account*.json
 **/*gcloud*.json
 amora-analytics-firebase-adminsdk*.json
+google-services.json
