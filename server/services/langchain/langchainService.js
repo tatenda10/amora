@@ -33,8 +33,8 @@ class LangChainService {
       this.llm = new ChatOpenAI({
         openAIApiKey: process.env.OPENAI_API_KEY,
         modelName: process.env.OPENAI_MODEL || 'gpt-4',
-        temperature: parseFloat(process.env.OPENAI_TEMPERATURE) || 0.7,
-        maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS) || 150,
+        temperature: parseFloat(process.env.OPENAI_TEMPERATURE) || 0.8,
+        maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS) || 300,
       });
     } catch (error) {
       console.warn('ChatOpenAI initialization failed:', error.message);

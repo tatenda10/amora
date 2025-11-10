@@ -104,12 +104,11 @@ const AppNavigator = () => {
           </Stack.Navigator>
         )
       ) : (
-        // Unauthenticated: start at Login, keep IntroSlides out to avoid accidental navigation
+        // Unauthenticated: Start with IntroSlides
         <Stack.Navigator screenOptions={{ headerShown: false, gestureEnabled: false }}>
+          <Stack.Screen name="IntroSlides" component={IntroSlides} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />
-          {/* Optional: re-enable IntroSlides later explicitly via navigation */}
-          {/* <Stack.Screen name="IntroSlides" component={IntroSlides} /> */}
           <Stack.Screen name="Chat" component={ChatScreen} />
           <Stack.Screen name="Upgrade" component={UpgradeScreen} />
           <Stack.Screen name="Support" component={SupportScreen} />

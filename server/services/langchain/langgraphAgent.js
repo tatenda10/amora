@@ -14,6 +14,7 @@ try {
 }
 const pool = require('../../db/connection');
 const DatasetService = require('./datasetService');
+const aiConfig = require('../../config/aiCompanionConfig');
 
 /**
  * LangGraph-based Conversation Agent for Amora AI Companions
@@ -21,14 +22,31 @@ const DatasetService = require('./datasetService');
  */
 class LangGraphAgent {
   constructor() {
+    // Get AI configuration from centralized config
+    this.aiConfig = aiConfig.getAIConfig();
+    
     // Initialize LLM with error handling
     try {
+      // Use AI_MAX_RESPONSE_LENGTH from env if available, otherwise use OPENAI_MAX_TOKENS
+      const maxTokens = parseInt(process.env.AI_MAX_RESPONSE_LENGTH) || 
+                        parseInt(process.env.OPENAI_MAX_TOKENS) || 
+                        this.aiConfig.maxResponseLength || 
+                        300;
+      
+      // Calculate temperature based on casualness level (higher casualness = higher temperature)
+      const baseTemperature = parseFloat(process.env.OPENAI_TEMPERATURE) || 0.8;
+      const casualnessLevel = this.aiConfig.casualnessLevel || 0.8;
+      // Adjust temperature: 0.7 base + (casualness * 0.2) = range 0.7-0.9
+      const adjustedTemperature = Math.min(0.95, baseTemperature + (casualnessLevel * 0.15));
+      
       this.llm = new ChatOpenAI({
         openAIApiKey: process.env.OPENAI_API_KEY,
         modelName: process.env.OPENAI_MODEL || 'gpt-4',
-        temperature: parseFloat(process.env.OPENAI_TEMPERATURE) || 0.7,
-        maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS) || 150,
+        temperature: adjustedTemperature,
+        maxTokens: maxTokens,
       });
+      
+      console.log(`🤖 LLM initialized - Max Tokens: ${maxTokens}, Temperature: ${adjustedTemperature.toFixed(2)}, Casualness: ${casualnessLevel}`);
     } catch (error) {
       console.warn('ChatOpenAI initialization failed:', error.message);
       this.llm = null;
@@ -73,6 +91,9 @@ class LangGraphAgent {
         user,
         memories,
         processMessage: async (userMessage, conversationId) => {
+          // Get conversation context first
+          const conversationContext = await this.getConversationContext(conversationId);
+          
           // Initialize state with all necessary data
           let state = {
             userMessage,
@@ -80,10 +101,11 @@ class LangGraphAgent {
             user,
             memories,
             conversationId,
-            conversationHistory: []
+            conversationContext,
+            conversationHistory: conversationContext.recentMessages || []
           };
           
-          // Step 1: Analyze input
+          // Step 1: Analyze input (this also updates conversationContext)
           state = await this.analyzeInput(state);
           
           // Step 2: Detect emotion
@@ -92,13 +114,13 @@ class LangGraphAgent {
           // Step 3: Analyze topic
           state = await this.analyzeTopic(state);
           
-          // Step 4: Generate response
+          // Step 4: Generate response using LLM
           state = await this.generateResponse(state);
           
-          // Step 5: Enhance response
+          // Step 5: Enhance response (light touch - don't over-process LLM output)
           state = await this.enhanceResponse(state);
           
-          // Step 6: Check if follow-up is needed
+          // Step 6: Check if follow-up is needed (be conservative)
           const shouldFollowUp = this.shouldGenerateFollowUp(state);
           if (shouldFollowUp) {
             state = await this.generateFollowUp(state);
@@ -192,12 +214,15 @@ class LangGraphAgent {
    */
   async getConversationContext(conversationId) {
     try {
+      // Use AI_MAX_CONVERSATION_HISTORY from env, default to 20
+      const maxHistory = parseInt(process.env.AI_MAX_CONVERSATION_HISTORY) || 20;
+      
       const [messages] = await this.pool.query(`
         SELECT content, sender_type, created_at 
         FROM messages 
         WHERE conversation_id = ? 
         ORDER BY created_at DESC 
-        LIMIT 10
+        LIMIT ${maxHistory}
       `, [conversationId]);
 
       console.log(`📝 Retrieved ${messages.length} messages for conversation ${conversationId}`);
@@ -206,7 +231,7 @@ class LangGraphAgent {
       const recentMessages = messages.reverse(); // Get chronological order
       const currentTopic = this.extractCurrentTopic(recentMessages);
       
-      console.log(`🎯 Extracted topic: ${currentTopic} from messages:`, recentMessages.map(m => m.content.substring(0, 50)));
+      console.log(`🎯 Extracted topic: ${currentTopic} from ${recentMessages.length} messages`);
       
       return {
         currentTopic: currentTopic,
@@ -288,25 +313,67 @@ class LangGraphAgent {
   }
 
   /**
-   * Detect emotional state
+   * Detect emotional state with configurable sensitivity
    */
   async detectEmotion(state) {
     const { userMessage } = state;
     
-    // Simple emotion detection without LangChain for now
-    const isHappy = /happy|great|awesome|amazing|excited|love|good|wonderful/i.test(userMessage);
-    const isSad = /sad|down|depressed|upset|lonely|tired|bad|terrible/i.test(userMessage);
-    const isFrustrated = /angry|mad|furious|annoyed|frustrated|hate/i.test(userMessage);
+    // Get emotion sensitivity from config
+    const emotionSensitivity = this.aiConfig.emotionSensitivity || 0.7;
+    
+    // More sensitive patterns for higher sensitivity levels
+    const happyPatterns = emotionSensitivity >= 0.8
+      ? /happy|great|awesome|amazing|excited|love|good|wonderful|nice|cool|yeah|yes|sweet|perfect|fantastic|delighted|joyful|pleased|glad|thrilled/i
+      : emotionSensitivity >= 0.6
+      ? /happy|great|awesome|amazing|excited|love|good|wonderful/i
+      : /happy|great|awesome|excited|love/i;
+    
+    const sadPatterns = emotionSensitivity >= 0.8
+      ? /sad|down|depressed|upset|lonely|tired|bad|terrible|awful|worst|hate|disappointed|frustrated|stressed|anxious|worried|sick|hurt/i
+      : emotionSensitivity >= 0.6
+      ? /sad|down|depressed|upset|lonely|tired|bad|terrible/i
+      : /sad|down|depressed|upset/i;
+    
+    const frustratedPatterns = emotionSensitivity >= 0.8
+      ? /angry|mad|furious|annoyed|frustrated|hate|pissed|irritated|fuming|rage/i
+      : /angry|mad|furious|annoyed|frustrated|hate/i;
+    
+    const isHappy = happyPatterns.test(userMessage);
+    const isSad = sadPatterns.test(userMessage);
+    const isFrustrated = frustratedPatterns.test(userMessage);
+    
+    // Adjust intensity based on sensitivity
+    const baseIntensity = Math.round(5 + (emotionSensitivity * 3)); // Range: 5-8
     
     let emotionalState;
     if (isHappy) {
-      emotionalState = { state: 'happy', intensity: 7, context: 'User seems positive' };
+      emotionalState = { 
+        state: 'happy', 
+        intensity: Math.min(9, baseIntensity + 1), 
+        context: 'User seems positive',
+        sensitivity: emotionSensitivity
+      };
     } else if (isSad) {
-      emotionalState = { state: 'sad', intensity: 6, context: 'User seems down' };
+      emotionalState = { 
+        state: 'sad', 
+        intensity: Math.min(9, baseIntensity), 
+        context: 'User seems down',
+        sensitivity: emotionSensitivity
+      };
     } else if (isFrustrated) {
-      emotionalState = { state: 'frustrated', intensity: 6, context: 'User seems frustrated' };
+      emotionalState = { 
+        state: 'frustrated', 
+        intensity: Math.min(9, baseIntensity), 
+        context: 'User seems frustrated',
+        sensitivity: emotionSensitivity
+      };
     } else {
-      emotionalState = { state: 'neutral', intensity: 5, context: 'Default emotional state' };
+      emotionalState = { 
+        state: 'neutral', 
+        intensity: 5, 
+        context: 'Default emotional state',
+        sensitivity: emotionSensitivity
+      };
     }
     
     return {
@@ -358,10 +425,10 @@ class LangGraphAgent {
   }
 
   /**
-   * Generate AI response
+   * Generate AI response using LLM
    */
   async generateResponse(state) {
-    const { userMessage, companion, user, memories, emotionalState, topicAnalysis } = state;
+    const { userMessage, companion, user, memories, emotionalState, topicAnalysis, conversationContext } = state;
     
     if (!companion) {
       throw new Error('Companion data is missing');
@@ -372,192 +439,166 @@ class LangGraphAgent {
     const traits = Array.isArray(companion.traits) ? companion.traits : 
                    (typeof companion.traits === 'string' ? JSON.parse(companion.traits || '[]') : []);
 
+    // Get AI configuration
+    const casualnessLevel = this.aiConfig.casualnessLevel || 0.8;
+    const empathyLevel = this.aiConfig.empathyLevel || 0.8;
+    const emotionSensitivity = this.aiConfig.emotionSensitivity || 0.7;
+    const questionFrequency = this.aiConfig.questionFrequency || 0.6;
+    const maxResponseLength = this.aiConfig.maxResponseLength || 150;
+    const minResponseLength = this.aiConfig.minResponseLength || 10;
+
+    // Build conversation history for context - format more naturally
+    const conversationHistory = conversationContext?.recentMessages || [];
+    // Use configured max history or default to 10 for prompt (to avoid token overflow)
+    const historyLimit = Math.min(10, parseInt(process.env.AI_MAX_CONVERSATION_HISTORY) || 10);
+    const formattedHistory = conversationHistory.slice(-historyLimit).map(msg => {
+      if (msg.sender_type === 'user') {
+        return `${userName}: ${msg.content}`;
+      } else {
+        return `${companionName}: ${msg.content}`;
+      }
+    }).join('\n');
+
+    // Format memories more naturally
+    const maxMemories = Math.min(5, parseInt(process.env.AI_MAX_RAG_EXAMPLES) || 5);
     const memoryContext = memories.length > 0 ? 
-      `\nTHINGS I REMEMBER ABOUT ${userName.toUpperCase()}:\n${memories.slice(0, 3).map(m => `- ${m.content}`).join('\n')}` : 
+      memories.slice(0, maxMemories).map(m => m.content).join('. ') + '.' : 
       '';
 
-    // Try to find similar patterns from datasets first (but be conservative)
-    let datasetResponse = null;
+    // Build conversation style guidance based on configuration
+    const casualnessGuidance = casualnessLevel >= 0.8 
+      ? 'very casual and relaxed, like texting a close friend'
+      : casualnessLevel >= 0.6
+      ? 'casual and friendly, like talking to a good friend'
+      : casualnessLevel >= 0.4
+      ? 'warm but somewhat polished, like a friendly acquaintance'
+      : 'polite and professional, but still warm';
+
+    const empathyGuidance = empathyLevel >= 0.8
+      ? 'Show high empathy - really tune into their feelings and respond with deep understanding and care'
+      : empathyLevel >= 0.6
+      ? 'Show good empathy - acknowledge their feelings and respond supportively'
+      : 'Show appropriate empathy - recognize their emotional state and respond accordingly';
+
+    const emotionGuidance = emotionSensitivity >= 0.8
+      ? 'Be highly sensitive to emotional cues - pick up on subtle feelings and respond to them'
+      : emotionSensitivity >= 0.6
+      ? 'Be attuned to their emotions - notice how they\'re feeling and match or support that'
+      : 'Be aware of their emotional state and respond appropriately';
+
+    const questionGuidance = questionFrequency >= 0.7
+      ? 'Ask questions frequently to show interest and keep conversation flowing'
+      : questionFrequency >= 0.5
+      ? 'Ask questions when appropriate to show interest and engagement'
+      : 'Ask questions sparingly, only when genuinely curious or to deepen the conversation';
+
+    const responseLengthGuidance = `Keep responses between ${minResponseLength} and ${maxResponseLength} characters - ${maxResponseLength < 100 ? 'be concise' : maxResponseLength < 200 ? 'be conversational' : 'feel free to elaborate when needed'}`;
+
+    // Build natural, conversational system prompt with configuration integration
+    const systemPrompt = `You are ${companionName}. You're ${companion.age} years old, ${companion.personality || 'friendly and warm'}, and you're from ${companion.country || 'a place with interesting stories'}.
+
+${companion.backstory ? `About you: ${companion.backstory}\n` : ''}${traits.length > 0 ? `You're known for being: ${traits.join(', ')}\n` : ''}
+
+${memoryContext ? `Things you remember about ${userName}: ${memoryContext}\n` : ''}
+
+${formattedHistory ? `Here's what you two have been talking about recently:\n${formattedHistory}\n` : ''}
+
+You're having a ${casualnessGuidance} conversation with ${userName}${emotionalState?.state !== 'neutral' ? ` - they seem ${emotionalState.state} right now` : ''}. ${topicAnalysis?.topic && topicAnalysis.topic !== 'general' ? `You've been talking about ${topicAnalysis.topic}.` : ''}
+
+HOW TO RESPOND:
+- Talk ${casualnessGuidance}
+- Be yourself - respond as ${companionName}, not as a helpful assistant
+- ${empathyGuidance}
+- ${emotionGuidance}
+- Show real interest in what ${userName} is saying
+- ${questionGuidance}
+- If something reminds you of a past conversation, mention it naturally
+- Match their vibe - if they're excited, get excited too. If they're down, be supportive
+- Use emojis like you would in a text (😊 😄 💙) - not too many, just when it feels right
+- Keep it real and human - no corporate speak, no "I'm here to help" stuff
+- ${responseLengthGuidance}
+- Never mention AI, being programmed, or anything that breaks the illusion you're a real person
+- Speak in first person about your own life, thoughts, and experiences
+
+Think of this like chatting with a friend over text. Be genuine, be ${companionName}, and just have a natural conversation.
+
+${userName} just said: "${userMessage}"
+
+Respond as ${companionName} would - naturally, authentically, like a real person.`;
+
     try {
-      const similarPatterns = this.datasetService.findSimilarPatterns(userMessage, state.inputAnalysis?.context);
-      if (similarPatterns.length > 0) {
-        const bestPattern = similarPatterns[0];
-        
-        // Only use dataset response if similarity score is high enough and context makes sense
-        if (bestPattern.score > 0.5 && this.isContextuallyAppropriate(bestPattern, userMessage, state.inputAnalysis)) {
-          console.log(`🎯 Using dataset pattern: "${bestPattern.userMessage}" -> "${bestPattern.aiResponse}" (score: ${bestPattern.score})`);
-          datasetResponse = this.adaptDatasetResponse(bestPattern, companion, userName);
-        } else {
-          console.log(`📝 Dataset pattern rejected: "${bestPattern.userMessage}" -> "${bestPattern.aiResponse}" (score: ${bestPattern.score} too low or context inappropriate)`);
-        }
-      } else {
-        console.log(`📝 No dataset patterns found for: "${userMessage}"`);
+      // Log the prompt being sent (for debugging)
+      if (process.env.DEBUG_PROMPTS === 'true' || this.aiConfig.enableDebugLogging) {
+        console.log('\n=== SYSTEM PROMPT BEING SENT TO LLM ===');
+        console.log(`Config: Casualness=${casualnessLevel}, Empathy=${empathyLevel}, Emotion=${emotionSensitivity}, Questions=${questionFrequency}`);
+        console.log(`Response Length: ${minResponseLength}-${maxResponseLength} characters`);
+        console.log(systemPrompt);
+        console.log(`\n=== USER MESSAGE ===`);
+        console.log(userMessage);
+        console.log('=== END PROMPT ===\n');
       }
+      
+      // Generate response using LLM
+      // Use a more natural message structure
+      const messages = [
+        ['system', systemPrompt],
+        ['human', userMessage]
+      ];
+
+      const prompt = ChatPromptTemplate.fromMessages(messages);
+      const chain = prompt.pipe(this.llm).pipe(new StringOutputParser());
+      
+      const response = await chain.invoke({});
+      
+      // Clean up response - remove any AI mentions
+      let cleanedResponse = response.trim();
+      cleanedResponse = cleanedResponse.replace(/\b(as an AI|I'm an AI|I am an AI|as a language model|I'm a language model)\b/gi, '');
+      cleanedResponse = cleanedResponse.replace(/\b(I'm programmed|I'm designed|I was created)\b/gi, 'I');
+      
+      // Ensure response isn't too short or empty
+      if (cleanedResponse.length < 5) {
+        cleanedResponse = `That's interesting! Tell me more about that.`;
+      }
+
+      console.log(`✅ Generated LLM response: "${cleanedResponse.substring(0, 100)}..."`);
+      
+      return {
+        ...state,
+        response: cleanedResponse
+      };
     } catch (error) {
-      console.warn('Dataset pattern matching failed:', error.message);
+      console.error('❌ Error generating LLM response:', error);
+      
+      // Fallback to simple natural response if LLM fails
+      const fallbackResponse = this.generateFallbackResponse(state);
+      
+      return {
+        ...state,
+        response: fallbackResponse
+      };
     }
+  }
 
-    // Generate responses based on companion's identity
-    const responses = {
-      greeting: [
-        `Hey ${userName}! 😊`,
-        `Hi there!`,
-        `Hello!`,
-        `Hey!`,
-        `Hi ${userName}!`,
-        `Good afternoon!`,
-        `Good morning!`,
-        `Good evening!`
-      ],
-      askingAboutAI: [
-        `I'm doing great, thanks for asking! How about you?`,
-        `I'm good! How are you doing?`,
-        `I'm doing well! How's your day going?`,
-        `I'm great! What about you?`
-      ],
-      askingAboutAge: [
-        `I'm ${companion.age} years old! How about you?`,
-        `I'm ${companion.age}! What about you - how old are you?`,
-        `I'm ${companion.age} years old. How old are you?`
-      ],
-      askingAboutName: [
-        `I'm ${companionName}! Nice to meet you, ${userName}!`,
-        `My name is ${companionName}! What's your name?`,
-        `I'm ${companionName}! How are you doing today?`
-      ],
-      askingAboutLocation: [
-        `I'm from ${companion.country}! Have you ever been there?`,
-        `I live in ${companion.country}! It's a beautiful place. Where are you from?`,
-        `I'm from ${companion.country}! What about you - where are you from?`
-      ],
-      askingAboutJob: [
-        `I'm a mechanic by day, but I love cooking and DJing on weekends! What do you do?`,
-        `I work as a mechanic, but my real passion is cooking and music. How about you?`,
-        `I fix cars during the week, but weekends I'm all about food and music! What's your job?`
-      ],
-      sharingAge: [
-        `Nice! We're pretty close in age then. What do you like to do for fun?`,
-        `Cool! I'm 28, so we're not too far apart. What are you into?`,
-        `That's great! I'm 28 myself. What's your favorite thing to do?`
-      ],
-      sharingName: [
-        `Nice to meet you! I'm Diego. What brings you here today?`,
-        `Pleasure to meet you! I'm Diego. How's your day going?`,
-        `Great to meet you! I'm Diego. What's on your mind?`
-      ],
-      sharingLocation: [
-        `That's awesome! I'm from Mexico. Have you ever been there?`,
-        `Cool! I'm from Mexico myself. What's it like where you're from?`,
-        `Nice! I'm from Mexico. What do you like most about your city?`
-      ],
-      sharingJob: [
-        `That sounds interesting! I'm a mechanic, but I love cooking and music on the side. What do you enjoy about your work?`,
-        `Cool job! I fix cars during the week, but weekends I'm all about food and DJing. How long have you been doing that?`,
-        `That's great! I'm a mechanic by day, but my real passion is cooking and music. What got you into your field?`
-      ],
-      respondingToQuestion: [
-        `That's great to hear!`,
-        `Nice!`,
-        `Awesome!`,
-        `That's wonderful!`
-      ],
-      sharingDayStatus: [
-        `That's fantastic! I'm glad your day is going well.`,
-        `Wonderful! It's always nice to have a good day.`,
-        `That's great to hear! What made it so good?`,
-        `Awesome! I love hearing when people have great days.`
-      ],
-      sharingWork: [
-        `Ah, the daily grind! How was your day at work?`,
-        `Work stuff, huh? Hope it wasn't too stressful.`,
-        `Sounds like a typical workday. What kind of work do you do?`,
-        `Work can be tiring sometimes. How are you feeling now?`
-      ],
-      sharingInterests: [
-        `That's awesome! I love that you're into creating things. What kind of stuff do you like to make?`,
-        `Creating with computers is so cool! I'm a mechanic, but I also love working with my hands. What's your favorite project?`,
-        `That sounds really interesting! I enjoy cooking and music, but technology is fascinating too. What got you into it?`,
-        `Nice! I'm always impressed by people who can create things. What's the most exciting thing you've built?`
-      ],
-      continuingTopic: [
-        `That's really interesting! Tell me more about that.`,
-        `I'd love to hear more details about that.`,
-        `That sounds fascinating! How does that work?`,
-        `That's cool! What's your experience with that been like?`
-      ],
-      goodbye: [
-        `Have a great lunch! Talk to you later! 😊`,
-        `Enjoy your lunch! See you soon!`,
-        `Have a good one! Chat with you later!`,
-        `Take care! Have a wonderful day!`
-      ],
-      happy: [
-        `That's wonderful! I'm so happy to hear that! What made you feel so good? 😄`,
-        `I love your positive energy! Tell me more about what's making you happy!`,
-        `That's amazing! I'd love to hear the details!`,
-        `That's great! What happened?`
-      ],
-      sad: [
-        `I'm sorry to hear that. Would you like to talk about what's bothering you? 💙`,
-        `That sounds really tough. I'm here if you want to share more.`,
-        `I can sense you're going through something difficult. How can I help?`
-      ],
-      question: [
-        `That's a great question! I'd love to explore that with you. What do you think? 🤔`,
-        `Interesting! I'm curious about your thoughts on that.`,
-        `That's something worth discussing! What's your take on it?`
-      ],
-      gratitude: [
-        `You're so welcome! I'm always here to chat. What's on your mind? 😊`,
-        `Of course! I love talking with you. How's your day going?`,
-        `Anytime! What else is happening in your world?`,
-        `My pleasure! What's new with you today?`
-      ],
-      general: [
-        `That's interesting! Tell me more about that.`,
-        `I'd love to hear more about what you're thinking.`,
-        `What's on your mind today?`,
-        `That sounds intriguing! What made you think of that?`
-      ]
-    };
-
-    let responseType = 'general';
-    if (state.inputAnalysis?.isGoodbye) responseType = 'goodbye';
-    else if (state.inputAnalysis?.isContinuingTopic) responseType = 'continuingTopic';
-    else if (state.inputAnalysis?.isSharingInterests) responseType = 'sharingInterests';
-    else if (state.inputAnalysis?.isSharingWork) responseType = 'sharingWork';
-    else if (state.inputAnalysis?.isSharingDayStatus) responseType = 'sharingDayStatus';
-    else if (state.inputAnalysis?.isRespondingToQuestion) responseType = 'respondingToQuestion';
-    else if (state.inputAnalysis?.isSharingAge) responseType = 'sharingAge';
-    else if (state.inputAnalysis?.isSharingName) responseType = 'sharingName';
-    else if (state.inputAnalysis?.isSharingLocation) responseType = 'sharingLocation';
-    else if (state.inputAnalysis?.isSharingJob) responseType = 'sharingJob';
-    else if (state.inputAnalysis?.isAskingAboutAge) responseType = 'askingAboutAge';
-    else if (state.inputAnalysis?.isAskingAboutName) responseType = 'askingAboutName';
-    else if (state.inputAnalysis?.isAskingAboutLocation) responseType = 'askingAboutLocation';
-    else if (state.inputAnalysis?.isAskingAboutJob) responseType = 'askingAboutJob';
-    else if (state.inputAnalysis?.isAskingAboutAI) responseType = 'askingAboutAI';
-    else if (state.inputAnalysis?.isGratitude) responseType = 'gratitude';
-    else if (state.inputAnalysis?.isGreeting) responseType = 'greeting';
-    else if (emotionalState?.state === 'happy') responseType = 'happy';
-    else if (emotionalState?.state === 'sad') responseType = 'sad';
-    else if (state.inputAnalysis?.isQuestion) responseType = 'question';
-
-    console.log(`🎯 Response type selected: ${responseType} (continuingTopic: ${state.inputAnalysis?.isContinuingTopic}, currentTopic: ${state.inputAnalysis?.currentTopic})`);
-
-    // Use dataset response if available, otherwise use predefined responses
-    let response;
-    if (datasetResponse) {
-      response = datasetResponse;
-    } else {
-      const responseOptions = responses[responseType];
-      response = responseOptions[Math.floor(Math.random() * responseOptions.length)];
-    }
+  /**
+   * Generate fallback response if LLM fails
+   */
+  generateFallbackResponse(state) {
+    const { userMessage, companion, user, emotionalState } = state;
+    const userName = user?.name || 'Friend';
+    const companionName = companion?.name || 'AI Companion';
     
-    return {
-      ...state,
-      response
-    };
+    // Simple pattern-based fallbacks for critical cases
+    if (state.inputAnalysis?.isGreeting) {
+      return `Hey ${userName}! How's it going? 😊`;
+    } else if (state.inputAnalysis?.isGoodbye) {
+      return `Take care! Talk to you later! 😊`;
+    } else if (emotionalState?.state === 'sad') {
+      return `I'm sorry to hear that. Want to talk about what's on your mind? 💙`;
+    } else if (state.inputAnalysis?.isQuestion) {
+      return `That's a good question! Let me think about that... What's your take on it?`;
+    } else {
+      return `That's interesting! Tell me more about that.`;
+    }
   }
 
   /**
@@ -621,27 +662,21 @@ class LangGraphAgent {
   }
 
   /**
-   * Enhance response with emotional attunement and style mirroring
+   * Enhance response with minimal processing (let LLM do the work)
    */
   async enhanceResponse(state) {
-    const { response, userMessage, emotionalState } = state;
+    const { response } = state;
     
-    let enhancedResponse = response;
+    // Minimal enhancement - trust the LLM output
+    // Only do light cleanup if absolutely necessary
+    let enhancedResponse = response.trim();
     
-    // Apply emotional attunement
-    if (emotionalState.state === 'sad' && emotionalState.intensity > 6) {
-      enhancedResponse = `I hear you. ${enhancedResponse}`;
-    } else if (emotionalState.state === 'frustrated' && emotionalState.intensity > 6) {
-      enhancedResponse = `I get why that's frustrating. ${enhancedResponse}`;
-    } else if (emotionalState.state === 'happy' && emotionalState.intensity > 7) {
-      enhancedResponse = `Love the energy! ${enhancedResponse}`;
-    }
+    // Remove any double spaces
+    enhancedResponse = enhancedResponse.replace(/\s+/g, ' ');
     
-    // Apply style mirroring (simplified)
-    const userEmojiCount = (userMessage.match(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]/u) || []).length;
-    if (userEmojiCount > 0 && userEmojiCount <= 2 && !enhancedResponse.includes('😊') && !enhancedResponse.includes('😄') && !enhancedResponse.includes('💙') && !enhancedResponse.includes('🤔')) {
-      const emojis = ['😊', '🙂', '😄', '😉'];
-      enhancedResponse += ` ${emojis[Math.floor(Math.random() * emojis.length)]}`;
+    // Ensure response ends properly
+    if (enhancedResponse && !enhancedResponse.match(/[.!?]$/)) {
+      // Don't force punctuation - let it be natural
     }
     
     return {
@@ -652,42 +687,11 @@ class LangGraphAgent {
 
   /**
    * Determine if follow-up question is needed
+   * Disabled - let the LLM handle conversation flow naturally
    */
   shouldGenerateFollowUp(state) {
-    const { userMessage, inputAnalysis } = state;
-    
-    // Don't generate follow-up for questions, commands, greetings, or when AI is already responding appropriately
-    if (inputAnalysis.isQuestion) return false;
-    if (inputAnalysis.isGreeting) return false; // Don't add follow-up to greetings
-    if (inputAnalysis.isGratitude) return false; // Don't add follow-up to gratitude
-    if (inputAnalysis.isRespondingToQuestion) return false; // Don't add follow-up to responses
-    if (inputAnalysis.isSharingDayStatus) return false; // Don't add follow-up to day status
-    if (inputAnalysis.isSharingWork) return false; // Don't add follow-up to work sharing
-    if (inputAnalysis.isSharingInterests) return false; // Don't add follow-up to interests sharing
-    if (inputAnalysis.isContinuingTopic) return false; // Don't add follow-up to topic continuation
-    if (inputAnalysis.isGoodbye) return false; // Don't add follow-up to goodbyes
-    if (inputAnalysis.isAskingAboutAI) return false; // AI is already responding to user's question
-    if (inputAnalysis.isAskingAboutAge) return false; // AI is already answering about age
-    if (inputAnalysis.isAskingAboutName) return false; // AI is already answering about name
-    if (inputAnalysis.isAskingAboutLocation) return false; // AI is already answering about location
-    if (inputAnalysis.isAskingAboutJob) return false; // AI is already answering about job
-    if (inputAnalysis.isSharingAge) return false; // AI is already responding to user sharing age
-    if (inputAnalysis.isSharingName) return false; // AI is already responding to user sharing name
-    if (inputAnalysis.isSharingLocation) return false; // AI is already responding to user sharing location
-    if (inputAnalysis.isSharingJob) return false; // AI is already responding to user sharing job
-    if (/^(stop|wait|don't|dont|no)/i.test(userMessage)) return false;
-    
-    // Don't generate follow-up for very short responses like "ok", "yes", "no"
-    if (userMessage.length < 5 && /^(ok|yes|no|yeah|nope|sure)$/i.test(userMessage.trim())) {
-      return false;
-    }
-    
-    // Only generate follow-up for substantial messages that need continuation
-    // Be conservative - most responses should stand alone
-    if (userMessage.length > 20 && inputAnalysis.isPersonal) {
-      return true;
-    }
-    
+    // Disable automatic follow-ups - the LLM will naturally include questions
+    // in its responses when appropriate based on context
     return false;
   }
 
@@ -791,15 +795,18 @@ class LangGraphAgent {
     }
   }
 
-  async getRelevantMemories(companionId, userId, limit = 5) {
+  async getRelevantMemories(companionId, userId, limit = null) {
     try {
-      const limitNum = parseInt(limit);
+      // Use configured max memories or provided limit
+      const limitNum = limit || Math.min(5, parseInt(process.env.AI_MAX_RAG_EXAMPLES) || 5);
+      const maxMemories = parseInt(process.env.AI_MAX_MEMORIES_PER_USER) || 100;
+      
       const [memories] = await this.pool.query(`
         SELECT content, memory_type, importance_score
         FROM companion_memories 
         WHERE companion_id = ? AND user_id = ? AND is_active = TRUE
         ORDER BY importance_score DESC, created_at DESC
-        LIMIT ${limitNum}
+        LIMIT ${Math.min(limitNum, maxMemories)}
       `, [parseInt(companionId), userId]);
       
       return memories;

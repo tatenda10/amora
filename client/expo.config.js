@@ -4,12 +4,12 @@ module.exports = ({ config }) => ({
   slug: "amora-ai-companion",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/icon.png",
+  icon: "./assets/logo.png",
   userInterfaceStyle: "automatic",
   splash: {
-    image: "./assets/splash-icon.png",
+    image: "./assets/logo.png",
     resizeMode: "contain",
-    backgroundColor: "#5F4B8B"
+    backgroundColor: "#5F4B8B"  
   },
   assetBundlePatterns: [
     "**/*"
@@ -26,11 +26,12 @@ module.exports = ({ config }) => ({
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/adaptive-icon.png",
+      foregroundImage: "./assets/logo.png",
       backgroundColor: "#5F4B8B"
     },
     package: "com.amora.companion",
     googleServicesFile: "./google-services.json",
+    label: "Amora",
     permissions: [
       "android.permission.CAMERA",
       "android.permission.READ_EXTERNAL_STORAGE",
@@ -44,7 +45,7 @@ module.exports = ({ config }) => ({
     favicon: "./assets/favicon.png"
   },
   scheme: "amora",
-  redirectUri: "https://auth.expo.io/@anonymous/amora-ai-companion",
+  redirectUri: "https://auth.expo.io/@anonymous/com.amora.companion",
   extra: {
     googleWebClientId: "361569775776-746ckv1qh0k8rqhhept05vc5shv2qh8e.apps.googleusercontent.com",
     eas: {

@@ -30,6 +30,7 @@
       "package": "com.amora.companion",
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
+      "label": "Amora",
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",

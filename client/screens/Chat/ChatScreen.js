@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   Keyboard,
+  Animated,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,7 +43,11 @@ const ChatScreen = ({ route, navigation }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const flatListRef = useRef(null);
+  const inputRef = useRef(null);
+  const keyboardHeightAnim = useRef(new Animated.Value(0)).current;
+  const inputPaddingAnim = useRef(new Animated.Value(0)).current;
   
   const conversationId = route.params?.conversationId;
   const companion = route.params?.companion || {
@@ -66,52 +71,79 @@ const ChatScreen = ({ route, navigation }) => {
     };
   }, [conversationId, loadMessages, joinConversation, leaveConversation, markAsRead]);
 
-  // Manual keyboard handling
+  // Initialize input padding with safe area
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => {
-        setKeyboardHeight(e.endCoordinates.height);
-        // Scroll to bottom when keyboard appears
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-      }
-    );
+    const initialPadding = Platform.OS === 'ios' ? insets.bottom : 12;
+    inputPaddingAnim.setValue(initialPadding);
+  }, [insets.bottom, inputPaddingAnim]);
 
-    const keyboardDidHideListener = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-      }
-    );
+  // Manual keyboard handling with animation
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const keyboardWillShowListener = Keyboard.addListener(showEvent, (e) => {
+      const height = e.endCoordinates.height;
+      setKeyboardHeight(height);
+      setIsKeyboardVisible(true);
+      
+      const duration = Platform.OS === 'ios' ? (e.duration || 250) : 100;
+      const bottomPadding = Platform.OS === 'ios' ? insets.bottom : 12;
+      
+      // Animate keyboard height for FlatList padding
+      Animated.parallel([
+        Animated.timing(keyboardHeightAnim, {
+          toValue: height,
+          duration: duration,
+          useNativeDriver: false,
+        }),
+        // Animate input padding (keyboard height + safe area)
+        Animated.timing(inputPaddingAnim, {
+          toValue: height + bottomPadding,
+          duration: duration,
+          useNativeDriver: false,
+        }),
+      ]).start();
+
+      // Scroll to bottom when keyboard appears
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, Platform.OS === 'ios' ? 300 : 100);
+    });
+
+    const keyboardWillHideListener = Keyboard.addListener(hideEvent, (e) => {
+      setKeyboardHeight(0);
+      setIsKeyboardVisible(false);
+      
+      const duration = Platform.OS === 'ios' ? (e.duration || 250) : 100;
+      const bottomPadding = Platform.OS === 'ios' ? insets.bottom : 12;
+      
+      // Animate keyboard height back to 0
+      Animated.parallel([
+        Animated.timing(keyboardHeightAnim, {
+          toValue: 0,
+          duration: duration,
+          useNativeDriver: false,
+        }),
+        // Animate input padding back to safe area only
+        Animated.timing(inputPaddingAnim, {
+          toValue: bottomPadding,
+          duration: duration,
+          useNativeDriver: false,
+        }),
+      ]).start();
+    });
 
     return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
     };
-  }, []);
+  }, [keyboardHeightAnim, inputPaddingAnim, insets.bottom]);
 
   // Clear error when component mounts
   useEffect(() => {
     clearError();
   }, [clearError]);
-
-  // Handle keyboard show/hide events for auto-scroll
-  useEffect(() => {
-    const keyboardWillShow = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      () => {
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-      }
-    );
-
-    return () => {
-      keyboardWillShow.remove();
-    };
-  }, []);
 
   // Handle typing indicators
   const handleTyping = useCallback((text) => {
@@ -554,68 +586,98 @@ const ChatScreen = ({ route, navigation }) => {
       {renderError()}
 
       {/* Messages */}
-      <FlatList
-        ref={flatListRef}
-        data={groupedMessages}
-        renderItem={renderGroupedItem}
-        keyExtractor={(item, index) => `${item.type}-${item.date}-${index}`}
-        className="flex-1 px-2"
-        contentContainerStyle={{
-          paddingHorizontal: 15,
-          paddingVertical: 10,
-          flexGrow: 1,
-          paddingBottom: keyboardHeight > 0 ? keyboardHeight + 20 : 20
+      <Animated.View 
+        style={{ 
+          flex: 1,
+          paddingBottom: keyboardHeightAnim
         }}
-        onScroll={handleScroll}
-        scrollEventThrottle={400}
-        keyboardShouldPersistTaps="handled"
-        ListHeaderComponent={() => 
-          loading.messages ? (
-            <View className="py-4 items-center">
-              <ActivityIndicator size="small" color={COLORS.dustyPink} />
-              <Text className="text-sm text-gray-500 mt-2">Loading older messages...</Text>
-            </View>
-          ) : null
-        }
-        onContentSizeChange={() => {
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }, 100);
-        }}
-        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-      />
+      >
+        <FlatList
+          ref={flatListRef}
+          data={groupedMessages}
+          renderItem={renderGroupedItem}
+          keyExtractor={(item, index) => `${item.type}-${item.date}-${index}`}
+          className="flex-1 px-2"
+          contentContainerStyle={{
+            paddingHorizontal: 15,
+            paddingVertical: 10,
+            flexGrow: 1,
+            paddingBottom: 20
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={400}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="none"
+          ListHeaderComponent={() => 
+            loading.messages ? (
+              <View className="py-4 items-center">
+                <ActivityIndicator size="small" color={COLORS.dustyPink} />
+                <Text className="text-sm text-gray-500 mt-2">Loading older messages...</Text>
+              </View>
+            ) : null
+          }
+          onContentSizeChange={() => {
+            if (isKeyboardVisible) {
+              setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+              }, 100);
+            }
+          }}
+          onLayout={() => {
+            if (!isKeyboardVisible) {
+              flatListRef.current?.scrollToEnd({ animated: false });
+            }
+          }}
+        />
+      </Animated.View>
 
       {/* Typing Indicator */}
       {renderTypingIndicator()}
 
       {/* Input */}
-      <View 
-        className="flex-row items-end px-4 py-3 bg-white border-t border-gray-200" 
-        style={{ 
-          paddingBottom: Platform.OS === 'ios' ? (keyboardHeight > 0 ? keyboardHeight : insets.bottom) : insets.bottom,
-          marginBottom: Platform.OS === 'android' && keyboardHeight > 0 ? keyboardHeight : 0
+      <Animated.View 
+        className="flex-row items-end px-4 py-3 bg-white border-t border-gray-200"
+        style={{
+          paddingBottom: inputPaddingAnim,
         }}
       >
-        <TextInput
-          className="flex-1 bg-gray-100 rounded-full px-4 py-3 mr-3 text-base text-gray-900"
-          value={message}
-          onChangeText={handleTyping}
-          placeholder="Type a message..."
-          placeholderTextColor="#9CA3AF"
-          multiline
-          maxLength={1000}
-          editable={true}
-          style={{ maxHeight: 100, minHeight: 44 }}
-          onFocus={() => {
-            setTimeout(() => {
-              flatListRef.current?.scrollToEnd({ animated: true });
-            }, 300);
-          }}
-        />
+        <View style={{ flex: 1, marginRight: 12 }}>
+          <TextInput
+            ref={inputRef}
+            className="flex-1 bg-gray-100 rounded-full px-4 py-3 text-base text-gray-900"
+            value={message}
+            onChangeText={handleTyping}
+            placeholder="Type a message..."
+            placeholderTextColor="#9CA3AF"
+            multiline
+            maxLength={1000}
+            editable={true}
+            style={{ 
+              maxHeight: 100, 
+              minHeight: 44,
+              textAlignVertical: 'center',
+              paddingTop: Platform.OS === 'android' ? 12 : 12,
+              paddingBottom: Platform.OS === 'android' ? 12 : 12,
+            }}
+            onFocus={() => {
+              // Small delay to ensure keyboard is fully shown
+              setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+              }, Platform.OS === 'ios' ? 300 : 150);
+            }}
+            onBlur={() => {
+              // Keep keyboard handling smooth
+            }}
+            blurOnSubmit={false}
+            returnKeyType="default"
+            keyboardType="default"
+          />
+        </View>
         <TouchableOpacity 
           className="w-12 h-12 rounded-full items-center justify-center"
           style={{
-            backgroundColor: message.trim() && !loading.sending ? '#FF6F91' : '#D1D5DB'
+            backgroundColor: message.trim() && !loading.sending ? '#FF6F91' : '#D1D5DB',
+            marginBottom: Platform.OS === 'android' ? 0 : 0,
           }}
           onPress={handleSend}
           disabled={!message.trim() || loading.sending}
@@ -623,10 +685,10 @@ const ChatScreen = ({ route, navigation }) => {
           {loading.sending ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
-            <Text className="text-white font-semibold">Send</Text>
+            <Ionicons name="send" size={20} color="white" />
           )}
         </TouchableOpacity>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 };

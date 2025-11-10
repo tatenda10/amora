@@ -3,6 +3,7 @@ const langchainService = require('../../../services/langchain/langchainService')
 const langgraphAgent = require('../../../services/langchain/langgraphAgent');
 const memoryService = require('../../../services/langchain/memoryService');
 const toolsService = require('../../../services/langchain/toolsService');
+const logger = require('../../../utils/logger');
 
 /**
  * Send a message in a conversation with LangChain/LangGraph AI response
@@ -14,6 +15,7 @@ async function sendMessageLangChain(req, res) {
     const { content, message_type = 'text', use_langgraph = true } = req.body;
     const user_id = req.user?.id;
 
+    // Input validation is handled by middleware, but double-check
     if (!content) {
       return res.status(400).json({ message: 'content is required' });
     }
@@ -68,26 +70,37 @@ async function sendMessageLangChain(req, res) {
 
     let aiResponse = null;
     try {
-      let aiResponseContent;
+      // Add timeout for AI response generation (30 seconds)
+      const AI_TIMEOUT = 30000;
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('AI response timeout')), AI_TIMEOUT);
+      });
 
+      let aiResponseContent;
       if (use_langgraph) {
         // Use LangGraph agent for sophisticated conversation flow
-        console.log('Using LangGraph agent for response generation');
-        aiResponseContent = await langgraphAgent.processMessage({
-          companionId: conversation.companion_id,
-          userId: user_id,
-          conversationId: conversation_id,
-          userMessage: content
-        });
+        logger.debug('Using LangGraph agent for response generation');
+        aiResponseContent = await Promise.race([
+          langgraphAgent.processMessage({
+            companionId: conversation.companion_id,
+            userId: user_id,
+            conversationId: conversation_id,
+            userMessage: content
+          }),
+          timeoutPromise
+        ]);
       } else {
         // Use LangChain service for simpler conversation chain
-        console.log('Using LangChain service for response generation');
-        aiResponseContent = await langchainService.generateResponse({
-          companionId: conversation.companion_id,
-          userId: user_id,
-          conversationId: conversation_id,
-          userMessage: content
-        });
+        logger.debug('Using LangChain service for response generation');
+        aiResponseContent = await Promise.race([
+          langchainService.generateResponse({
+            companionId: conversation.companion_id,
+            userId: user_id,
+            conversationId: conversation_id,
+            userMessage: content
+          }),
+          timeoutPromise
+        ]);
       }
 
       // Store AI response
@@ -113,8 +126,33 @@ async function sendMessageLangChain(req, res) {
       );
 
     } catch (aiError) {
-      console.error('AI response generation error:', aiError);
-      throw aiError; // Let it fail properly
+      logger.error('AI response generation error:', {
+        error: aiError.message,
+        conversationId: conversation_id,
+        userId: user_id,
+        isTimeout: aiError.message === 'AI response timeout'
+      });
+      
+      // Return a graceful fallback response instead of throwing
+      if (aiError.message === 'AI response timeout') {
+        aiResponseContent = "Sorry, I'm taking a bit longer than usual to respond. Can you try again?";
+      } else {
+        // For other errors, use a generic fallback
+        aiResponseContent = "I'm having trouble responding right now. Could you rephrase that?";
+      }
+      
+      // Store fallback response
+      const [fallbackResult] = await pool.execute(`
+        INSERT INTO messages (conversation_id, sender_type, sender_id, content, message_type, created_at, updated_at)
+        VALUES (?, 'companion', ?, ?, 'text', NOW(), NOW())
+      `, [conversation_id, conversation.companion_id.toString(), aiResponseContent]);
+
+      const fallbackMessageId = fallbackResult.insertId;
+      const [fallbackMessages] = await pool.execute(
+        'SELECT * FROM messages WHERE id = ?',
+        [fallbackMessageId]
+      );
+      aiResponse = fallbackMessages[0];
     }
 
     // Send real-time update via Socket.IO
@@ -134,7 +172,13 @@ async function sendMessageLangChain(req, res) {
     });
 
   } catch (error) {
-    console.error('Error in sendMessageLangChain:', error);
+    logger.error('Error in sendMessageLangChain:', {
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      conversationId: req.params.conversation_id,
+      userId: req.user?.id
+    });
+    
     res.status(500).json({ 
       message: 'Error sending message',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -240,7 +284,11 @@ async function getConversationLangChain(req, res) {
     });
 
   } catch (error) {
-    console.error('Error in getConversationLangChain:', error);
+    logger.error('Error in getConversationLangChain:', {
+      error: error.message,
+      conversationId: req.params.conversation_id
+    });
+    
     res.status(500).json({ 
       message: 'Error fetching conversation',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -290,7 +338,11 @@ async function getMemoryInsights(req, res) {
     });
 
   } catch (error) {
-    console.error('Error getting memory insights:', error);
+    logger.error('Error getting memory insights:', {
+      error: error.message,
+      conversationId: req.params.conversation_id
+    });
+    
     res.status(500).json({ 
       message: 'Error fetching memory insights',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -342,7 +394,12 @@ async function searchMemories(req, res) {
     });
 
   } catch (error) {
-    console.error('Error searching memories:', error);
+    logger.error('Error searching memories:', {
+      error: error.message,
+      conversationId: req.params.conversation_id,
+      query: req.query.query
+    });
+    
     res.status(500).json({ 
       message: 'Error searching memories',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined

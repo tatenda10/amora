@@ -34,5 +34,9 @@ server/.env
 **/*gcloud*.json
 client/amora-analytics-firebase-adminsdk*.json
 
+# Android build folders (generated, should not be in git or EAS)
+client/android/
+android/
+
 
 

@@ -1,0 +1,29 @@
+# Android build folder
+android/
+
+# iOS build folder (if exists)
+ios/
+
+# Node modules
+node_modules/
+
+# Build outputs
+.expo/
+dist/
+build/
+*.log
+
+# Environment files
+.env
+.env.local
+.env*.local
+
+# Firebase credentials
+*firebase-adminsdk*.json
+*service-account*.json
+*gcloud*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+

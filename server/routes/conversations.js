@@ -18,6 +18,7 @@ const {
   searchMemories
 } = require('../controllers/conversations/handlers/sendMessageLangChain');
 const { authenticateToken } = require('../middleware/authMiddleware');
+const { validateMessageInput, validateConversationIdParam } = require('../middleware/inputValidator');
 
 // All routes are protected with JWT authentication
 router.use(authenticateToken);
@@ -39,71 +40,67 @@ router.post('/', createConversation);
  */
 router.post('/select-companion', selectCompanion);
 
-/**
- * @route   GET /api/conversations/status
- * @desc    Check if conversations table exists
- * @access  Private
- */
-router.get('/status', async (req, res) => {
-  try {
-    const pool = require('../db/connection');
-    const [tableCheck] = await pool.execute(`
-      SELECT COUNT(*) as table_exists 
-      FROM information_schema.tables 
-      WHERE table_schema = DATABASE() 
-      AND table_name = 'conversations'
-    `);
-    
-    res.json({
-      conversationsTableExists: tableCheck[0].table_exists > 0,
-      database: process.env.DB_NAME || 'amora_db'
-    });
-  } catch (error) {
-    // Error checking table status
-    res.status(500).json({ 
-      message: 'Database error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
+// Debug routes removed for production
+// These routes are only available in development mode
+if (process.env.NODE_ENV === 'development') {
+  /**
+   * @route   GET /api/conversations/status
+   * @desc    Check if conversations table exists (DEV ONLY)
+   * @access  Private
+   */
+  router.get('/status', async (req, res) => {
+    try {
+      const pool = require('../db/connection');
+      const [tableCheck] = await pool.execute(`
+        SELECT COUNT(*) as table_exists 
+        FROM information_schema.tables 
+        WHERE table_schema = DATABASE() 
+        AND table_name = 'conversations'
+      `);
+      
+      res.json({
+        conversationsTableExists: tableCheck[0].table_exists > 0,
+        database: process.env.DB_NAME || 'amora_db'
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: 'Database error',
+        error: error.message
+      });
+    }
+  });
 
-/**
- * @route   GET /api/conversations/test
- * @desc    Test endpoint to debug conversation creation
- * @access  Private
- */
-router.get('/test', async (req, res) => {
-  try {
-    // Conversation test endpoint
-    
-    // Test database connection
-    const pool = require('../db/connection');
-    const [testQuery] = await pool.execute('SELECT 1 as test');
-    // Database connection test
-    
-    // Check if conversations table exists
-    const [tableCheck] = await pool.execute(`
-      SELECT COUNT(*) as table_exists 
-      FROM information_schema.tables 
-      WHERE table_schema = DATABASE() 
-      AND table_name = 'conversations'
-    `);
-    // Table check result
-    
-    res.json({
-      user: req.user,
-      databaseConnected: testQuery[0].test === 1,
-      conversationsTableExists: tableCheck[0].table_exists > 0,
-      message: 'Test endpoint working'
-    });
-  } catch (error) {
-    // Test endpoint error
-    res.status(500).json({ 
-      message: 'Test endpoint error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
+  /**
+   * @route   GET /api/conversations/test
+   * @desc    Test endpoint to debug conversation creation (DEV ONLY)
+   * @access  Private
+   */
+  router.get('/test', async (req, res) => {
+    try {
+      const pool = require('../db/connection');
+      const [testQuery] = await pool.execute('SELECT 1 as test');
+      
+      const [tableCheck] = await pool.execute(`
+        SELECT COUNT(*) as table_exists 
+        FROM information_schema.tables 
+        WHERE table_schema = DATABASE() 
+        AND table_name = 'conversations'
+      `);
+      
+      res.json({
+        user: req.user,
+        databaseConnected: testQuery[0].test === 1,
+        conversationsTableExists: tableCheck[0].table_exists > 0,
+        message: 'Test endpoint working'
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        message: 'Test endpoint error',
+        error: error.message
+      });
+    }
+  });
+}
 
 /**
  * @route   GET /api/conversations
@@ -124,14 +121,14 @@ router.get('/user/:user_id', getConversations);
  * @desc    Get a specific conversation with messages (now includes LangChain context)
  * @access  Private
  */
-router.get('/:conversation_id', getConversationLangChain);
+router.get('/:conversation_id', validateConversationIdParam, getConversationLangChain);
 
 /**
  * @route   POST /api/conversations/:conversation_id/messages
  * @desc    Send a message in a conversation (now uses LangChain/LangGraph)
  * @access  Private
  */
-router.post('/:conversation_id/messages', sendMessageLangChain);
+router.post('/:conversation_id/messages', validateConversationIdParam, validateMessageInput, sendMessageLangChain);
 
 /**
  * @route   POST /api/conversations/:conversation_id/read
@@ -157,7 +154,7 @@ router.delete('/:conversation_id', deleteConversation);
  * @param   {string} [message_type] - Message type (default: 'text')
  * @param   {boolean} [use_langgraph] - Use LangGraph agent (default: true)
  */
-router.post('/:conversation_id/messages/langchain', sendMessageLangChain);
+router.post('/:conversation_id/messages/langchain', validateConversationIdParam, validateMessageInput, sendMessageLangChain);
 
 /**
  * @route   GET /api/conversations/:conversation_id/langchain
