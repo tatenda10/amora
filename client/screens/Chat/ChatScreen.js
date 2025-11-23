@@ -10,7 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   Keyboard,
-  Animated,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,12 +42,9 @@ const ChatScreen = ({ route, navigation }) => {
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState(null);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const flatListRef = useRef(null);
   const inputRef = useRef(null);
-  const keyboardHeightAnim = useRef(new Animated.Value(0)).current;
-  const inputPaddingAnim = useRef(new Animated.Value(0)).current;
   
   const conversationId = route.params?.conversationId;
   const companion = route.params?.companion || {
@@ -71,74 +68,29 @@ const ChatScreen = ({ route, navigation }) => {
     };
   }, [conversationId, loadMessages, joinConversation, leaveConversation, markAsRead]);
 
-  // Initialize input padding with safe area
-  useEffect(() => {
-    const initialPadding = Platform.OS === 'ios' ? insets.bottom : 12;
-    inputPaddingAnim.setValue(initialPadding);
-  }, [insets.bottom, inputPaddingAnim]);
 
-  // Manual keyboard handling with animation
+  // Keyboard handling for scroll-to-bottom
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
-    const keyboardWillShowListener = Keyboard.addListener(showEvent, (e) => {
-      const height = e.endCoordinates.height;
-      setKeyboardHeight(height);
+    const keyboardWillShowListener = Keyboard.addListener(showEvent, () => {
       setIsKeyboardVisible(true);
-      
-      const duration = Platform.OS === 'ios' ? (e.duration || 250) : 100;
-      const bottomPadding = Platform.OS === 'ios' ? insets.bottom : 12;
-      
-      // Animate keyboard height for FlatList padding
-      Animated.parallel([
-        Animated.timing(keyboardHeightAnim, {
-          toValue: height,
-          duration: duration,
-          useNativeDriver: false,
-        }),
-        // Animate input padding (keyboard height + safe area)
-        Animated.timing(inputPaddingAnim, {
-          toValue: height + bottomPadding,
-          duration: duration,
-          useNativeDriver: false,
-        }),
-      ]).start();
-
       // Scroll to bottom when keyboard appears
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
-      }, Platform.OS === 'ios' ? 300 : 100);
+      }, Platform.OS === 'ios' ? 300 : 150);
     });
 
-    const keyboardWillHideListener = Keyboard.addListener(hideEvent, (e) => {
-      setKeyboardHeight(0);
+    const keyboardWillHideListener = Keyboard.addListener(hideEvent, () => {
       setIsKeyboardVisible(false);
-      
-      const duration = Platform.OS === 'ios' ? (e.duration || 250) : 100;
-      const bottomPadding = Platform.OS === 'ios' ? insets.bottom : 12;
-      
-      // Animate keyboard height back to 0
-      Animated.parallel([
-        Animated.timing(keyboardHeightAnim, {
-          toValue: 0,
-          duration: duration,
-          useNativeDriver: false,
-        }),
-        // Animate input padding back to safe area only
-        Animated.timing(inputPaddingAnim, {
-          toValue: bottomPadding,
-          duration: duration,
-          useNativeDriver: false,
-        }),
-      ]).start();
     });
 
     return () => {
       keyboardWillShowListener.remove();
       keyboardWillHideListener.remove();
     };
-  }, [keyboardHeightAnim, inputPaddingAnim, insets.bottom]);
+  }, []);
 
   // Clear error when component mounts
   useEffect(() => {
@@ -411,14 +363,20 @@ const ChatScreen = ({ route, navigation }) => {
           </View>
         )}
         
-        <View className={`max-w-xs px-4 py-2 rounded-2xl ${
-          isUser 
-            ? 'bg-blue-500 rounded-br-md' 
-            : 'bg-gray-200 rounded-bl-md'
-        }`}>
-          <Text className={`text-base ${
-            isUser ? 'text-white' : 'text-gray-800'
-          }`}>
+        <View 
+          style={{ maxWidth: Dimensions.get('window').width * 0.75 }}
+          className={`px-4 py-2 rounded-2xl ${
+            isUser 
+              ? 'bg-blue-500 rounded-br-md' 
+              : 'bg-gray-200 rounded-bl-md'
+          }`}
+        >
+          <Text 
+            className={`text-base ${
+              isUser ? 'text-white' : 'text-gray-800'
+            }`}
+            style={{ flexShrink: 1 }}
+          >
             {item.content}
           </Text>
           
@@ -478,7 +436,7 @@ const ChatScreen = ({ route, navigation }) => {
     if (!isAITyping) return null;
 
     return (
-      <View className="flex-row items-end mb-2 px-2">
+      <View className="flex-row items-end mb-2">
         <View className="w-8 h-8 rounded-full mr-2 bg-gray-200 items-center justify-center">
           {companion.profile_image_url ? (
         <Image
@@ -492,7 +450,10 @@ const ChatScreen = ({ route, navigation }) => {
             </Text>
           )}
         </View>
-        <View className="bg-gray-200 px-4 py-2 rounded-2xl rounded-bl-md max-w-xs">
+        <View 
+          style={{ maxWidth: Dimensions.get('window').width * 0.75 }}
+          className="bg-gray-200 px-4 py-2 rounded-2xl rounded-bl-md"
+        >
           <Text className="text-gray-600 text-sm">
             {companion.name} is typing...
           </Text>
@@ -546,7 +507,7 @@ const ChatScreen = ({ route, navigation }) => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
         <TouchableOpacity 
@@ -585,29 +546,23 @@ const ChatScreen = ({ route, navigation }) => {
       {/* Error */}
       {renderError()}
 
-      {/* Messages */}
-      <Animated.View 
-        style={{ 
-          flex: 1,
-          paddingBottom: keyboardHeightAnim
-        }}
-      >
+      {/* Messages Container */}
+      <View style={{ flex: 1 }}>
         <FlatList
           ref={flatListRef}
           data={groupedMessages}
           renderItem={renderGroupedItem}
           keyExtractor={(item, index) => `${item.type}-${item.date}-${index}`}
-          className="flex-1 px-2"
+          className="flex-1"
           contentContainerStyle={{
             paddingHorizontal: 15,
             paddingVertical: 10,
-            flexGrow: 1,
-            paddingBottom: 20
+            paddingBottom: 20,
           }}
           onScroll={handleScroll}
           scrollEventThrottle={400}
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="none"
+          keyboardDismissMode="interactive"
           ListHeaderComponent={() => 
             loading.messages ? (
               <View className="py-4 items-center">
@@ -616,6 +571,11 @@ const ChatScreen = ({ route, navigation }) => {
               </View>
             ) : null
           }
+          ListFooterComponent={() => (
+            <View>
+              {renderTypingIndicator()}
+            </View>
+          )}
           onContentSizeChange={() => {
             if (isKeyboardVisible) {
               setTimeout(() => {
@@ -624,21 +584,21 @@ const ChatScreen = ({ route, navigation }) => {
             }
           }}
           onLayout={() => {
-            if (!isKeyboardVisible) {
-              flatListRef.current?.scrollToEnd({ animated: false });
+            if (!isKeyboardVisible && currentMessages.length > 0) {
+              setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: false });
+              }, 100);
             }
           }}
         />
-      </Animated.View>
-
-      {/* Typing Indicator */}
-      {renderTypingIndicator()}
+      </View>
 
       {/* Input */}
-      <Animated.View 
+      <View 
         className="flex-row items-end px-4 py-3 bg-white border-t border-gray-200"
         style={{
-          paddingBottom: inputPaddingAnim,
+          paddingTop: 12,
+          backgroundColor: 'white',
         }}
       >
         <View style={{ flex: 1, marginRight: 12 }}>
@@ -656,8 +616,8 @@ const ChatScreen = ({ route, navigation }) => {
               maxHeight: 100, 
               minHeight: 44,
               textAlignVertical: 'center',
-              paddingTop: Platform.OS === 'android' ? 12 : 12,
-              paddingBottom: Platform.OS === 'android' ? 12 : 12,
+              paddingTop: 12,
+              paddingBottom: 12,
             }}
             onFocus={() => {
               // Small delay to ensure keyboard is fully shown
@@ -688,7 +648,7 @@ const ChatScreen = ({ route, navigation }) => {
             <Ionicons name="send" size={20} color="white" />
           )}
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     </SafeAreaView>
   );
 };

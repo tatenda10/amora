@@ -2,7 +2,7 @@ module.exports = ({ config }) => ({
   ...config,
   name: "Amora AI Companion",
   slug: "amora-ai-companion",
-  version: "1.0.0",
+  version: "2.0.0",
   orientation: "portrait",
   icon: "./assets/logo.png",
   userInterfaceStyle: "automatic",
@@ -22,7 +22,11 @@ module.exports = ({ config }) => ({
       NSCameraUsageDescription: "This app needs access to camera to take profile pictures.",
       NSUserNotificationsUsageDescription: "This app needs permission to send you notifications for new messages and matches."
     },
-    googleServicesFile: "./GoogleService-Info.plist"
+    googleServicesFile: "./GoogleService-Info.plist",
+    podfileProperties: {
+      RNFirebaseAnalyticsWithoutAdIdSupport: true,
+      RNFirebaseAsStaticFramework: true
+    }
   },
   android: {
     adaptiveIcon: {
@@ -31,7 +35,7 @@ module.exports = ({ config }) => ({
     },
     package: "com.amora.companion",
     googleServicesFile: "./google-services.json",
-    label: "Amora",
+    usesCleartextTraffic: true,
     permissions: [
       "android.permission.CAMERA",
       "android.permission.READ_EXTERNAL_STORAGE",
@@ -53,6 +57,9 @@ module.exports = ({ config }) => ({
     }
   },
   plugins: [
+    "@react-native-firebase/app",
+    "@react-native-firebase/analytics",
+    "@react-native-firebase/messaging",
     "expo-web-browser",
     "expo-dev-client",
     "expo-font",
@@ -62,6 +69,15 @@ module.exports = ({ config }) => ({
       {
         photosPermission: "The app accesses your photos to let you select a profile picture.",
         cameraPermission: "The app accesses your camera to let you take a profile picture."
+      }
+    ],
+    [
+      "expo-build-properties",
+      {
+        "ios": {
+    "useFrameworks": "static",
+    "buildReactNativeFromSource": true
+  }
       }
     ]
   ],

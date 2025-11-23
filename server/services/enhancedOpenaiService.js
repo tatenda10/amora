@@ -4,6 +4,8 @@ const RAGService = require('./ragService');
 const EnhancedContextService = require('./enhancedContextService');
 const ContentModerationService = require('./contentModerationService');
 const MultiLanguageService = require('./multiLanguageService');
+const claudeService = require('./claudeService');
+const chromaMemoryService = require('./chromaMemoryService');
 const aiConfig = require('../config/aiCompanionConfig');
 const { SIMPLE_GREETING_PROMPT, FULL_CONVERSATION_PROMPT } = require('./prompts/systemPromptTemplates');
 const { HUMAN_RESPONSE_RULES, HUMAN_RESPONSE_EXAMPLES, CONVERSATIONAL_ENGAGEMENT, CONVERSATION_KEEPERS, SPECIFIC_TOPIC_ENGAGEMENT, FINAL_REMINDER } = require('./prompts/humanResponseRules');
@@ -16,10 +18,19 @@ class EnhancedOpenAIService {
     // Get configuration from centralized config
     this.config = aiConfig.getAIConfig();
     
-    // Initialize OpenAI client
-    this.openai = new OpenAI({
-      apiKey: this.config.apiKey,
-    });
+    // Use Claude exclusively - no OpenAI fallback
+    this.useClaude = process.env.CLAUDE_API_KEY && (process.env.USE_CLAUDE !== 'false');
+    if (this.useClaude && claudeService.isAvailable()) {
+      const claudeModel = process.env.CLAUDE_MODEL || 'from env';
+      console.log(`✅ Claude is enabled for AI responses (model: ${claudeModel}, Claude-only mode)`);
+      // Don't initialize OpenAI - we're using Claude exclusively
+      this.openai = null;
+    } else {
+      // Claude is required - don't fallback to OpenAI
+      console.error('❌ CLAUDE_API_KEY is required. Please set it in your .env file.');
+      this.openai = null;
+      this.useClaude = false;
+    }
     
     // AI Configuration from centralized config
     this.model = this.config.model;
@@ -40,6 +51,17 @@ class EnhancedOpenAIService {
     
     // Initialize multi-language service
     this.multiLanguage = new MultiLanguageService();
+
+    // Check if Chroma is available for semantic memory search
+    this.useChroma = chromaMemoryService.isAvailable();
+    if (this.useChroma) {
+      console.log('✅ Chroma semantic memory search is enabled (free & open source)');
+      // Initialize Chroma collection on startup
+      chromaMemoryService.initializeCollection().catch(err => {
+        console.error('Failed to initialize Chroma:', err);
+        this.useChroma = false;
+      });
+    }
 
     // Store human response rules for easy access
     this.humanResponseRules = {
@@ -289,16 +311,22 @@ class EnhancedOpenAIService {
         userDetails
       );
       
-      // Generate AI response
-      const completion = await this.openai.chat.completions.create({
-        model: this.model,
-        messages,
-        max_tokens: this.maxTokens,
-        temperature: this.temperature,
-        user: userId.toString(),
-      });
-      
-      const rawAIResponse = completion.choices[0].message.content;
+      // Generate AI response - Use Claude if available, otherwise OpenAI
+      let rawAIResponse;
+      if (this.useClaude && claudeService.isAvailable()) {
+        // Use Claude for better human-like conversations
+        rawAIResponse = await claudeService.generateResponse(messages, systemPrompt);
+      } else {
+        // Fallback to OpenAI
+        const completion = await this.openai.chat.completions.create({
+          model: this.model,
+          messages,
+          max_tokens: this.maxTokens,
+          temperature: this.temperature,
+          user: userId.toString(),
+        });
+        rawAIResponse = completion.choices[0].message.content;
+      }
       
       // Add emojis to the raw response based on context
       const responseWithEmojis = await this.addContextualEmojis(
@@ -656,14 +684,27 @@ class EnhancedOpenAIService {
           violatesHumanRules
         );
         
-        const completion = await this.openai.chat.completions.create({
-          model: this.model,
-          messages: [{ role: 'user', content: engagementPrompt }],
-          max_tokens: 80,
-          temperature: 0.7,
-        });
-        
-        let enhancedResponse = completion.choices[0].message.content.trim();
+        let enhancedResponse;
+        if (this.useClaude && claudeService.isAvailable()) {
+          // Use Claude for engagement enhancement
+          enhancedResponse = await claudeService.generateResponse(
+            [{ role: 'user', content: engagementPrompt }],
+            'You are a helpful assistant that enhances conversation engagement. Keep responses short and natural (max 80 tokens).'
+          );
+          enhancedResponse = enhancedResponse.trim();
+        } else if (this.openai) {
+          // Fallback to OpenAI
+          const completion = await this.openai.chat.completions.create({
+            model: this.model,
+            messages: [{ role: 'user', content: engagementPrompt }],
+            max_tokens: 80,
+            temperature: 0.7,
+          });
+          enhancedResponse = completion.choices[0].message.content.trim();
+        } else {
+          // No AI service available, return original response
+          enhancedResponse = rawResponse;
+        }
         
         // Add emojis to enhanced response
         enhancedResponse = await this.addContextualEmojis(
@@ -827,14 +868,33 @@ class EnhancedOpenAIService {
         "emoji_suggestions": ["array", "of", "appropriate", "emojis"]
       }`;
       
-      const completion = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: emotionPrompt }],
-        max_tokens: 200,
-        temperature: 0.3,
-      });
-      
-      const emotionData = JSON.parse(completion.choices[0].message.content);
+      let emotionData;
+      if (this.useClaude && claudeService.isAvailable()) {
+        // Use Claude for emotion detection
+        const response = await claudeService.generateResponse(
+          [{ role: 'user', content: emotionPrompt }],
+          'You are a helpful assistant that analyzes emotional tone. Always respond with valid JSON only.'
+        );
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          emotionData = JSON.parse(jsonMatch[0]);
+        } else {
+          // Fallback to neutral if JSON parsing fails
+          emotionData = { state: 'neutral', intensity: 5, context: 'Unable to detect emotion', suggested_response_tone: 'warm', emoji_suggestions: [] };
+        }
+      } else if (this.openai) {
+        // Fallback to OpenAI
+        const completion = await this.openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: [{ role: 'user', content: emotionPrompt }],
+          max_tokens: 200,
+          temperature: 0.3,
+        });
+        emotionData = JSON.parse(completion.choices[0].message.content);
+      } else {
+        // No AI service available, return neutral state
+        emotionData = { state: 'neutral', intensity: 5, context: 'No AI service available', suggested_response_tone: 'warm', emoji_suggestions: [] };
+      }
       
       // Store emotional state
       await this.pool.execute(`
@@ -899,8 +959,9 @@ class EnhancedOpenAIService {
   buildEnhancedConversationMessages(systemPrompt, conversationHistory, userMessage, emotionalState, userDetails) {
     const messages = [{ role: 'system', content: systemPrompt }];
     
-    // Add only recent conversation history (last 5 exchanges max)
-    const recentHistory = conversationHistory.slice(-10); // 5 exchanges (10 messages)
+    // Increased from 10 to 30 messages (15 exchanges) for better conversation continuity
+    // This allows the AI to remember more context and have more natural, human-like conversations
+    const recentHistory = conversationHistory.slice(-30); // 15 exchanges (30 messages)
     for (const message of recentHistory) {
       const role = message.sender_type === 'user' ? 'user' : 'assistant';
       messages.push({
@@ -1107,28 +1168,109 @@ class EnhancedOpenAIService {
 
   async getRelevantMemories(companionId, userId, userMessage) {
     try {
+      // Try Chroma semantic search first if available
+      if (this.useChroma && chromaMemoryService.isAvailable()) {
+        try {
+          const chromaMemories = await chromaMemoryService.searchMemories(
+            companionId,
+            userId,
+            userMessage,
+            30
+          );
+
+          if (chromaMemories && chromaMemories.length > 0) {
+            console.log(`Found ${chromaMemories.length} relevant memories from Chroma (semantic search)`);
+            
+            // Get full memory details from database using dbMemoryId or content
+            const memoryIds = chromaMemories
+              .filter(m => m.dbMemoryId)
+              .map(m => parseInt(m.dbMemoryId));
+            
+            if (memoryIds.length > 0) {
+              const [dbMemories] = await this.pool.execute(`
+                SELECT 
+                  id,
+                  memory_type, 
+                  content, 
+                  importance_score, 
+                  emotional_context, 
+                  created_at,
+                  last_accessed
+                FROM companion_memories 
+                WHERE id IN (${memoryIds.map(() => '?').join(',')}) AND is_active = TRUE
+              `, memoryIds);
+              
+              // Merge Chroma relevance scores with database records
+              const chromaMap = new Map(chromaMemories.map(m => [m.dbMemoryId, m.relevanceScore]));
+              const enrichedMemories = dbMemories.map(m => ({
+                ...m,
+                relevance_score: chromaMap.get(m.id.toString()) || m.importance_score
+              }));
+              
+              // Sort by relevance score
+              enrichedMemories.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
+              
+              return enrichedMemories;
+            } else {
+              // If no dbMemoryId, use Chroma results directly
+              return chromaMemories.map(m => ({
+                memory_type: m.memoryType,
+                content: m.content,
+                importance_score: m.importanceScore,
+                emotional_context: {},
+                created_at: m.createdAt,
+                relevance_score: m.relevanceScore
+              }));
+            }
+          }
+        } catch (chromaError) {
+          console.warn('Chroma search failed, falling back to SQL:', chromaError.message);
+        }
+      }
+
+      // Fallback to enhanced SQL search (or use if Chroma not available)
+      // Enhanced SQL search with keyword matching for better relevance
+      // Increased from 10 to 30 memories for better recall and more personalized responses
       const [memories] = await this.pool.execute(`
-        SELECT memory_type, content, importance_score, emotional_context, created_at
+        SELECT 
+          memory_type, 
+          content, 
+          importance_score, 
+          emotional_context, 
+          created_at,
+          last_accessed,
+          CASE 
+            WHEN content LIKE ? THEN importance_score + 2
+            WHEN content LIKE ? THEN importance_score + 1
+            ELSE importance_score
+          END as relevance_score
         FROM companion_memories 
         WHERE companion_id = ? AND user_id = ? AND is_active = TRUE
-        ORDER BY importance_score DESC, last_accessed DESC
-        LIMIT 10
-      `, [parseInt(companionId), parseInt(userId)]);
+        ORDER BY relevance_score DESC, last_accessed DESC, created_at DESC
+        LIMIT 30
+      `, [
+        `%${userMessage.substring(0, 20)}%`, // Exact phrase match
+        `%${userMessage.split(' ').slice(0, 3).join(' ')}%`, // First few words
+        parseInt(companionId), 
+        parseInt(userId)
+      ]);
       
       return memories;
       
     } catch (error) {
+      console.error('Error getting relevant memories:', error);
       return [];
     }
   }
 
   async getConversationContext(conversationId) {
     try {
+      // Increased from 5 to 15 contexts for better understanding of conversation flow and topics
       const [contexts] = await this.pool.execute(`
         SELECT * FROM conversation_contexts 
         WHERE conversation_id = ? 
         ORDER BY importance_score DESC, created_at DESC
-        LIMIT 5
+        LIMIT 15
       `, [parseInt(conversationId)]);
       
       return contexts;
@@ -1139,12 +1281,13 @@ class EnhancedOpenAIService {
 
   async getConversationHistory(conversationId) {
     try {
+      // Increased from 20 to 50 messages for better conversation context and memory
       const [history] = await this.pool.execute(`
         SELECT sender_type, content, created_at
         FROM messages 
         WHERE conversation_id = ? 
         ORDER BY created_at ASC
-        LIMIT 20
+        LIMIT 50
       `, [parseInt(conversationId)]);
       
       return history;
@@ -1213,20 +1356,42 @@ class EnhancedOpenAIService {
           "emotional_context": "why this stood out"
         }]`;
         
-        const completion = await this.openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
-          messages: [{ role: 'user', content: memoryPrompt }],
-          max_tokens: 200,
-          temperature: 0.4,
-        });
-        
         let memories;
-        try {
-          memories = JSON.parse(completion.choices[0].message.content);
-        } catch (parseError) {
-          console.error('Error parsing memory JSON:', parseError);
-          console.error('Raw content:', completion.choices[0].message.content);
-          return; // Skip memory processing if JSON is invalid
+        if (this.useClaude && claudeService.isAvailable()) {
+          // Use Claude for memory extraction
+          try {
+            const response = await claudeService.generateResponse(
+              [{ role: 'user', content: memoryPrompt }],
+              'You are a helpful assistant that extracts meaningful memories. Always respond with valid JSON array only.'
+            );
+            const jsonMatch = response.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+              memories = JSON.parse(jsonMatch[0]);
+            } else {
+              memories = [];
+            }
+          } catch (error) {
+            console.error('Error extracting memories with Claude:', error);
+            return; // Skip memory processing if extraction fails
+          }
+        } else if (this.openai) {
+          // Fallback to OpenAI
+          const completion = await this.openai.chat.completions.create({
+            model: 'gpt-3.5-turbo',
+            messages: [{ role: 'user', content: memoryPrompt }],
+            max_tokens: 200,
+            temperature: 0.4,
+          });
+          try {
+            memories = JSON.parse(completion.choices[0].message.content);
+          } catch (parseError) {
+            console.error('Error parsing memory JSON:', parseError);
+            console.error('Raw content:', completion.choices[0].message.content);
+            return; // Skip memory processing if JSON is invalid
+          }
+        } else {
+          // No AI service available, skip memory extraction
+          return;
         }
         
         for (const memory of memories.slice(0, 2)) {

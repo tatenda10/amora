@@ -183,15 +183,40 @@ class MultiLanguageService {
    * Enhanced language detection with emoji consideration
    */
   detectLanguage(message) {
-    const text = message.toLowerCase();
+    const text = message.toLowerCase().trim();
     let maxScore = 0;
     let detectedLanguage = 'en'; // Default to English
+
+    // Strong English indicators - check these first
+    const strongEnglishWords = ['its', 'it\'s', 'but', 'just', 'bit', 'cold', 'today', 'your', 'side', 
+                                'the', 'and', 'is', 'are', 'was', 'were', 'have', 'has', 'had', 
+                                'hi', 'hie', 'hey', 'hello', 'how', 'what', 'when', 'where', 'why',
+                                'great', 'good', 'nice', 'fine', 'okay', 'yes', 'no', 'yeah', 'yep',
+                                'this', 'that', 'these', 'those', 'here', 'there', 'where'];
+    
+    // Check for strong English indicators first
+    let englishScore = 0;
+    for (const word of strongEnglishWords) {
+      const regex = new RegExp(`\\b${word}\\b`, 'g');
+      const matches = text.match(regex);
+      if (matches) {
+        englishScore += matches.length * 5; // High weight for English words
+      }
+    }
+    
+    // If we find strong English indicators, default to English
+    if (englishScore > 0) {
+      return 'en';
+    }
 
     // Remove emojis for text analysis but note their presence
     const textWithoutEmojis = text.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '');
     const emojiCount = (text.match(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu) || []).length;
 
     for (const [lang, data] of Object.entries(this.languagePatterns)) {
+      // Skip English in this loop since we already checked it
+      if (lang === 'en') continue;
+      
       let score = 0;
       
       // Check for specific patterns
@@ -221,8 +246,9 @@ class MultiLanguageService {
       }
     }
 
-    // If no clear language detected, default to English
-    return maxScore > 2 ? detectedLanguage : 'en';
+    // Only switch from English if we have strong evidence (score > 5)
+    // This prevents false positives from single words
+    return maxScore > 5 ? detectedLanguage : 'en';
   }
 
   /**

@@ -20,6 +20,7 @@ const matchingRoutes = require('./routes/matching/matchingRoutes');
 const conversationRoutes = require('./routes/conversations');
 const notificationRoutes = require('./routes/notifications');
 const userProfileRoutes = require('./routes/userProfile');
+const revenueCatRoutes = require('./routes/revenueCatRoutes');
 
 // Import Socket.IO manager
 const SocketManager = require('./socket/socketManager');
@@ -81,14 +82,14 @@ app.get('/health', async (req, res) => {
   try {
     // Check database connection
     await pool.execute('SELECT 1');
-    res.json({ 
+    res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
       database: 'connected'
     });
   } catch (error) {
     logger.error('Health check failed:', error);
-    res.status(503).json({ 
+    res.status(503).json({
       status: 'error',
       timestamp: new Date().toISOString(),
       database: 'disconnected'
@@ -104,12 +105,13 @@ app.use('/api/matching', matchingRoutes);
 app.use('/api/conversations', messageLimiter, conversationRoutes); // Message routes with message rate limiting
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/user-profile', userProfileRoutes);
+app.use('/api', revenueCatRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   // Rate limit error
   if (err.status === 429) {
-    return res.status(429).json({ 
+    return res.status(429).json({
       message: err.message || 'Too many requests, please try again later.'
     });
   }
@@ -117,27 +119,27 @@ app.use((err, req, res, next) => {
   // Multer file upload errors
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ 
-        message: 'File is too large. Maximum size is 5MB' 
+      return res.status(400).json({
+        message: 'File is too large. Maximum size is 5MB'
       });
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
-      return res.status(400).json({ 
-        message: 'Too many files. Maximum is 10 files' 
+      return res.status(400).json({
+        message: 'Too many files. Maximum is 10 files'
       });
     }
-    return res.status(400).json({ 
-      message: 'File upload error' 
+    return res.status(400).json({
+      message: 'File upload error'
     });
   }
 
   // CORS error
   if (err.message && err.message.includes('CORS')) {
-    return res.status(403).json({ 
-      message: 'CORS policy violation' 
+    return res.status(403).json({
+      message: 'CORS policy violation'
     });
   }
-  
+
   // Log error (always log errors, but format differently in production)
   logger.error('Error:', {
     message: err.message,
@@ -147,8 +149,8 @@ app.use((err, req, res, next) => {
   });
 
   // Return generic error in production, detailed in development
-  res.status(err.status || 500).json({ 
-    message: process.env.NODE_ENV === 'development' 
+  res.status(err.status || 500).json({
+    message: process.env.NODE_ENV === 'development'
       ? err.message || 'Internal server error'
       : 'Internal server error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
@@ -160,7 +162,7 @@ app.use('*', (req, res) => {
   if (process.env.NODE_ENV === 'development') {
     logger.debug('Route not found:', req.method, req.originalUrl);
   }
-  res.status(404).json({ 
+  res.status(404).json({
     message: 'Route not found'
   });
 });

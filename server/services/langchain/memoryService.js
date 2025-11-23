@@ -11,6 +11,8 @@ try {
 // Note: BufferMemory import may need to be adjusted based on actual package exports
 // const { BufferMemory } = require('@langchain/community/memory');
 const pool = require('../../db/connection');
+const chromaMemoryService = require('../chromaMemoryService');
+const claudeService = require('../claudeService');
 
 /**
  * LangChain-based Memory Service for Amora AI Companions
@@ -18,17 +20,29 @@ const pool = require('../../db/connection');
  */
 class MemoryService {
   constructor() {
-    // Initialize LLM with error handling
-    try {
-      this.llm = new ChatOpenAI({
-        openAIApiKey: process.env.OPENAI_API_KEY,
-        modelName: process.env.OPENAI_MODEL || 'gpt-4',
-        temperature: 0.3, // Lower temperature for more consistent memory extraction
-        maxTokens: 200,
-      });
-    } catch (error) {
-      console.warn('ChatOpenAI initialization failed in memory service:', error.message);
-      this.llm = null;
+    // Try to use Claude first (if available), otherwise fallback to OpenAI
+    this.useClaude = process.env.CLAUDE_API_KEY && claudeService.isAvailable();
+    
+    // Initialize LLM with error handling - only if not using Claude
+    if (!this.useClaude) {
+      try {
+        if (ChatOpenAI && process.env.OPENAI_API_KEY) {
+          this.llm = new ChatOpenAI({
+            openAIApiKey: process.env.OPENAI_API_KEY,
+            modelName: process.env.OPENAI_MODEL || 'gpt-4',
+            temperature: 0.3, // Lower temperature for more consistent memory extraction
+            maxTokens: 200,
+          });
+        } else {
+          this.llm = null;
+        }
+      } catch (error) {
+        console.warn('ChatOpenAI initialization failed in memory service:', error.message);
+        this.llm = null;
+      }
+    } else {
+      this.llm = null; // Using Claude instead
+      console.log(`Memory extraction will use Claude (model: ${process.env.CLAUDE_MODEL || 'from env'})`);
     }
 
     this.pool = pool;
@@ -43,79 +57,258 @@ class MemoryService {
       // Get existing memories for context
       const existingMemories = await this.getRelevantMemories(companionId, userId, 5);
       
-      // Extract new memories
-      const newMemories = await this.extractMemories(userMessage, aiResponse, existingMemories);
+      // Extract new memories (gracefully handles errors)
+      let newMemories = [];
+      try {
+        newMemories = await this.extractMemories(userMessage, aiResponse, existingMemories);
+      } catch (error) {
+        console.warn('Memory extraction failed, continuing without new memories:', error.message);
+        // Continue without new memories - don't block the conversation
+        return [];
+      }
       
       // Store significant memories
+      console.log(`\n=== MEMORY STORAGE DEBUG ===`);
+      console.log(`Extracted ${newMemories.length} memories`);
+      newMemories.forEach((m, i) => {
+        console.log(`Memory ${i + 1}: importance=${m.importance}, type=${m.type}, content="${m.content.substring(0, 50)}..."`);
+      });
+      
+      let storedCount = 0;
       for (const memory of newMemories) {
         if (memory.importance >= 7) {
+          console.log(`Storing memory with importance ${memory.importance}: "${memory.content.substring(0, 50)}..."`);
+          // Store in database (SQL only - no Chroma/OpenAI needed)
           await this.storeMemory(companionId, userId, memory);
+          storedCount++;
+        } else {
+          console.log(`Skipping memory with importance ${memory.importance} (need >= 7): "${memory.content.substring(0, 50)}..."`);
         }
       }
+      console.log(`Stored ${storedCount} memories out of ${newMemories.length} extracted`);
+      console.log(`=== END MEMORY STORAGE DEBUG ===\n`);
       
       return newMemories;
     } catch (error) {
       console.error('Error extracting and storing memories:', error);
+      // Return empty array instead of throwing - don't block conversation
       return [];
     }
   }
 
   /**
-   * Extract memories from conversation using LLM
+   * Extract memories from conversation using LLM (Claude or OpenAI)
    */
   async extractMemories(userMessage, aiResponse, existingMemories) {
-    // Check if LangChain is available
-    if (!this.llm || !ChatPromptTemplate) {
-      throw new Error('LangChain components not available for memory extraction. Please check LangChain installation.');
-    }
-
-    const memoryPrompt = ChatPromptTemplate.fromTemplate(`
-      Analyze this conversation and extract meaningful memories about the user.
-      
-      User: "{userMessage}"
-      AI Response: "{aiResponse}"
-      
-      Existing memories: {existingMemories}
-      
-      Extract 1-3 significant memories that are worth remembering about this user.
-      Focus on:
-      - Personal preferences and interests
-      - Emotional moments or significant experiences
-      - Important relationships or life events
-      - Goals, dreams, or aspirations
-      - Unique personality traits or quirks
-      
-      Respond with ONLY a JSON array:
-      [
-        {{
-          "type": "preference|experience|emotion|goal|fact",
-          "content": "natural phrasing of what to remember",
-          "importance": 1-10,
-          "emotional_context": "why this is significant"
-        }}
-      ]
-      
-      Only include memories with importance >= 6. If no significant memories, return empty array [].
-    `);
-
     const existingMemoriesText = existingMemories.length > 0 ? 
       existingMemories.map(m => `- ${m.content}`).join('\n') : 
       'No existing memories';
 
-    const chain = memoryPrompt.pipe(this.llm).pipe(new StringOutputParser());
-    
-    try {
-      const result = await chain.invoke({
-        userMessage,
-        aiResponse,
-        existingMemories: existingMemoriesText
-      });
-      
-      const memories = JSON.parse(result);
-      return Array.isArray(memories) ? memories : [];
-    } catch (error) {
-      console.error('Error extracting memories:', error);
-      throw error; // Don't fallback, let it fail
+    const memoryPrompt = `Analyze this conversation and extract meaningful memories about the user.
+
+User: "${userMessage}"
+AI Response: "${aiResponse}"
+
+Existing memories: ${existingMemoriesText}
+
+Extract 1-3 memories that are worth remembering about this user. Be generous - extract memories even for simple mentions.
+Focus on:
+- Personal preferences and interests (e.g., favorite shows, movies, hobbies)
+- Activities the user is doing (e.g., watching something, going somewhere)
+- Emotional moments or significant experiences
+- Important relationships or life events
+- Goals, dreams, or aspirations
+- Unique personality traits or quirks
+
+IMPORTANT: If the user mentions ANY specific thing (show, movie, hobby, activity, preference), extract at least 1 memory about it.
+
+Respond with ONLY a JSON array:
+[
+  {
+    "type": "preference|experience|emotion|goal|fact",
+    "content": "natural phrasing of what to remember",
+    "importance": 6-10,
+    "emotional_context": "why this is significant"
+  }
+]
+
+Always return at least 1 memory if the user mentions something specific. Minimum importance: 6.`;
+
+    // Use Claude if available, otherwise use OpenAI via LangChain
+    if (this.useClaude && claudeService.isAvailable()) {
+      try {
+        console.log(`\n=== MEMORY EXTRACTION FROM CLAUDE ===`);
+        console.log(`Prompt: ${memoryPrompt.substring(0, 200)}...`);
+        // Use a higher token limit for memory extraction (needs more tokens for JSON)
+        // Temporarily increase max_tokens for this call
+        const originalMaxTokens = claudeService.maxTokens;
+        claudeService.maxTokens = 500; // Increase for memory extraction (JSON needs more tokens)
+        
+        const response = await claudeService.generateResponse(
+          [{ role: 'user', content: memoryPrompt }],
+          'You are a helpful assistant that extracts meaningful memories from conversations. Always respond with valid JSON only. Keep emotional_context brief (1 sentence max).'
+        );
+        
+        // Restore original max_tokens
+        claudeService.maxTokens = originalMaxTokens;
+        
+        console.log(`Claude response (full): ${response}`);
+        
+        // Parse JSON from response - try multiple methods
+        let memories = [];
+        
+        // Method 1: Try to find JSON array with regex (greedy match to end)
+        // First, try to find the complete JSON array (may have extra content after)
+        const jsonMatch = response.match(/\[[\s\S]*?\]/);
+        if (jsonMatch) {
+          try {
+            let jsonStr = jsonMatch[0];
+            
+            // Fix incomplete JSON strings (find unclosed quotes)
+            // Look for strings that end without a closing quote before the next comma/brace
+            jsonStr = jsonStr.replace(/("emotional_context"\s*:\s*"[^"]*?)(?=\s*[,}\]])/g, (match) => {
+              // If the string doesn't end with a quote, add one
+              if (!match.endsWith('"')) {
+                return match + '"';
+              }
+              return match;
+            });
+            
+            // Fix incomplete strings at the end
+            if (jsonStr.match(/"[^"]*$/)) {
+              jsonStr = jsonStr.replace(/("[^"]*)$/, '$1"');
+            }
+            
+            // Count and close unclosed objects/arrays
+            const openBraces = (jsonStr.match(/\{/g) || []).length;
+            const closeBraces = (jsonStr.match(/\}/g) || []).length;
+            const openBrackets = (jsonStr.match(/\[/g) || []).length;
+            const closeBrackets = (jsonStr.match(/\]/g) || []).length;
+            
+            // Close unclosed objects/arrays
+            for (let i = 0; i < openBraces - closeBraces; i++) {
+              jsonStr += '}';
+            }
+            for (let i = 0; i < openBrackets - closeBrackets; i++) {
+              jsonStr += ']';
+            }
+            
+            memories = JSON.parse(jsonStr);
+            console.log(`Method 1 (regex with repair): Parsed ${memories.length} memories`);
+          } catch (parseError) {
+            console.warn('Method 1 (regex) parse failed:', parseError.message);
+            // Try to extract all complete memory objects from the response
+            try {
+              // Find all memory objects (they might be separated by commas or newlines)
+              const memoryObjects = [];
+              const memoryPattern = /\{\s*"type"\s*:\s*"([^"]+)",\s*"content"\s*:\s*"([^"]+)",\s*"importance"\s*:\s*(\d+)(?:,\s*"emotional_context"\s*:\s*"([^"]*)")?\s*\}/g;
+              let match;
+              while ((match = memoryPattern.exec(response)) !== null) {
+                memoryObjects.push({
+                  type: match[1],
+                  content: match[2],
+                  importance: parseInt(match[3]),
+                  emotional_context: match[4] || ''
+                });
+              }
+              
+              if (memoryObjects.length > 0) {
+                memories = memoryObjects;
+                console.log(`Method 1 (regex extract): Extracted ${memories.length} complete memories`);
+              } else {
+                // Fallback: Extract just the first memory
+                const firstMemoryMatch = response.match(/\{\s*"type"\s*:\s*"([^"]+)",\s*"content"\s*:\s*"([^"]+)",\s*"importance"\s*:\s*(\d+)/);
+                if (firstMemoryMatch) {
+                  memories = [{
+                    type: firstMemoryMatch[1],
+                    content: firstMemoryMatch[2],
+                    importance: parseInt(firstMemoryMatch[3]),
+                    emotional_context: ''
+                  }];
+                  console.log(`Method 1 (partial extract): Extracted 1 partial memory`);
+                }
+              }
+            } catch (partialError) {
+              console.warn('Partial extraction also failed:', partialError.message);
+            }
+          }
+        }
+        
+        // Method 2: Try parsing the entire response as JSON
+        if (memories.length === 0) {
+          try {
+            const trimmed = response.trim();
+            // Remove markdown code blocks if present
+            const cleaned = trimmed.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+            memories = JSON.parse(cleaned);
+            console.log(`Method 2 (direct parse): Parsed ${memories.length} memories`);
+          } catch (parseError) {
+            console.warn('Method 2 (direct parse) failed:', parseError.message);
+          }
+        }
+        
+        // Method 3: Try to extract JSON from markdown code blocks
+        if (memories.length === 0) {
+          const codeBlockMatch = response.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+          if (codeBlockMatch) {
+            try {
+              memories = JSON.parse(codeBlockMatch[1]);
+              console.log(`Method 3 (code block): Parsed ${memories.length} memories`);
+            } catch (parseError) {
+              console.warn('Method 3 (code block) parse failed:', parseError.message);
+            }
+          }
+        }
+        
+        if (memories.length > 0 && Array.isArray(memories)) {
+          console.log(`Successfully parsed ${memories.length} memories from Claude response`);
+          console.log(`=== END MEMORY EXTRACTION FROM CLAUDE ===\n`);
+          return memories;
+        }
+        
+        console.warn('No valid JSON array found in Claude response after trying all methods');
+        console.log(`Response was: ${response.substring(0, 200)}...`);
+        console.log(`=== END MEMORY EXTRACTION FROM CLAUDE ===\n`);
+        return [];
+      } catch (error) {
+        // Handle model not found or other Claude errors gracefully
+        console.error('Error extracting memories with Claude:', error);
+        if (error.status === 404) {
+          console.warn('Claude model not found for memory extraction. Skipping memory extraction.');
+        } else {
+          console.error('Error extracting memories with Claude:', error.message);
+        }
+        console.log(`=== END MEMORY EXTRACTION FROM CLAUDE ===\n`);
+        // Return empty array - don't break the conversation
+        return [];
+      }
+    } else if (this.llm && ChatPromptTemplate) {
+      // Use OpenAI via LangChain
+      try {
+        const promptTemplate = ChatPromptTemplate.fromTemplate(memoryPrompt);
+        const chain = promptTemplate.pipe(this.llm).pipe(new StringOutputParser());
+        
+        const result = await chain.invoke({
+          userMessage,
+          aiResponse,
+          existingMemories: existingMemoriesText
+        });
+        
+        const jsonMatch = result.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const memories = JSON.parse(jsonMatch[0]);
+          return Array.isArray(memories) ? memories : [];
+        }
+        return [];
+      } catch (error) {
+        console.error('Error extracting memories with OpenAI:', error);
+        // Don't throw - gracefully return empty array
+        return [];
+      }
+    } else {
+      // No LLM available - return empty array (memory extraction will be skipped)
+      console.warn('No LLM available for memory extraction. Skipping memory extraction.');
+      return [];
     }
   }
 
@@ -134,14 +327,16 @@ class MemoryService {
   }
 
   /**
-   * Store memory in database
+   * Store memory in database (SQL only)
    */
   async storeMemory(companionId, userId, memory) {
+    let dbMemoryId = null;
+    
     try {
       // Convert UUID to integer hash for database storage
       const userIdHash = this.hashUserId(userId);
       
-      await this.pool.execute(`
+      const [result] = await this.pool.execute(`
         INSERT INTO companion_memories 
         (companion_id, user_id, memory_type, content, importance_score, emotional_context, is_active)
         VALUES (?, ?, ?, ?, ?, ?, TRUE)
@@ -154,17 +349,78 @@ class MemoryService {
         JSON.stringify(memory.emotional_context || {})
       ]);
       
-      console.log(`Stored memory: ${memory.content.substring(0, 50)}...`);
+      dbMemoryId = result.insertId;
+      console.log(`Stored memory in database: ${memory.content.substring(0, 50)}...`);
+      
+      // Also store in Chroma for semantic search (uses Hugging Face free embeddings)
+      if (chromaMemoryService.isAvailable()) {
+        try {
+          console.log(`\n=== STORING MEMORY IN CHROMA ===`);
+          console.log(`Memory: "${memory.content.substring(0, 50)}..."`);
+          console.log(`companionId=${companionId}, userId=${userId}, dbMemoryId=${dbMemoryId}`);
+          await chromaMemoryService.storeMemory(companionId, userId, memory, dbMemoryId);
+          console.log(`Successfully stored memory in Chroma`);
+          console.log(`=== END CHROMA STORAGE ===\n`);
+        } catch (chromaError) {
+          console.error('Failed to store memory in Chroma:', chromaError);
+          console.error('Error details:', chromaError.message, chromaError.stack);
+          // Continue even if Chroma fails
+        }
+      } else {
+        console.warn('Chroma not available, skipping vector storage');
+      }
     } catch (error) {
       console.error('Error storing memory:', error);
+      throw error;
     }
+    
+    return dbMemoryId;
   }
 
   /**
    * Get relevant memories for conversation context
+   * Tries Chroma semantic search first, falls back to SQL if unavailable
    */
-  async getRelevantMemories(companionId, userId, limit = 10) {
+  async getRelevantMemories(companionId, userId, limit = 10, query = '') {
     try {
+      // Try Chroma semantic search first if available
+      if (chromaMemoryService.isAvailable() && query) {
+        try {
+          const chromaResults = await chromaMemoryService.searchMemories(
+            companionId,
+            userId,
+            query,
+            limit
+          );
+          if (chromaResults && chromaResults.length > 0) {
+            // Update last_accessed for retrieved memories
+            const memoryIds = chromaResults.map(m => m.dbMemoryId).filter(id => id);
+            if (memoryIds.length > 0) {
+              await this.pool.execute(`
+                UPDATE companion_memories 
+                SET last_accessed = NOW() 
+                WHERE id IN (${memoryIds.map(() => '?').join(',')})
+              `, memoryIds);
+            }
+            return chromaResults.map(m => ({
+              id: m.dbMemoryId,
+              content: m.content,
+              memory_type: m.memoryType,
+              importance_score: m.importanceScore,
+              relevance_score: m.relevanceScore
+            }));
+          }
+        } catch (chromaError) {
+          // Invalid API key or other embedding errors - gracefully fallback to SQL
+          if (chromaError.message.includes('Invalid OpenAI API key')) {
+            console.warn('⚠️  Chroma disabled due to invalid OpenAI API key. Using SQL-based memory search.');
+          } else {
+            console.debug('Chroma search failed (embedding service unavailable), falling back to SQL:', chromaError.message);
+          }
+        }
+      }
+      
+      // Fallback to SQL-based retrieval
       const limitNum = parseInt(limit);
       const [memories] = await this.pool.query(`
         SELECT 

@@ -21,6 +21,7 @@ try {
   console.warn('LangChain imports failed, using fallback implementation:', error.message);
 }
 const pool = require('../../db/connection');
+const claudeService = require('../claudeService');
 
 /**
  * LangChain-based AI Service for Amora AI Companions
@@ -28,16 +29,28 @@ const pool = require('../../db/connection');
  */
 class LangChainService {
   constructor() {
-    // Initialize LLM with error handling
-    try {
-      this.llm = new ChatOpenAI({
-        openAIApiKey: process.env.OPENAI_API_KEY,
-        modelName: process.env.OPENAI_MODEL || 'gpt-4',
-        temperature: parseFloat(process.env.OPENAI_TEMPERATURE) || 0.8,
-        maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS) || 300,
-      });
-    } catch (error) {
-      console.warn('ChatOpenAI initialization failed:', error.message);
+    // Use Claude if available (from CLAUDE_API_KEY), otherwise fallback to OpenAI
+    this.useClaude = process.env.CLAUDE_API_KEY && claudeService.isAvailable();
+    
+    if (this.useClaude) {
+      const claudeModel = process.env.CLAUDE_MODEL || 'from env';
+      console.log(`✅ LangChain service will use Claude (model: ${claudeModel})`);
+      this.llm = null; // Using Claude directly, not LangChain's ChatOpenAI
+    } else if (process.env.OPENAI_API_KEY) {
+      // Fallback to OpenAI only if Claude is not available
+      try {
+        this.llm = new ChatOpenAI({
+          openAIApiKey: process.env.OPENAI_API_KEY,
+          modelName: process.env.OPENAI_MODEL || 'gpt-4',
+          temperature: parseFloat(process.env.OPENAI_TEMPERATURE) || 0.8,
+          maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS) || 300,
+        });
+      } catch (error) {
+        console.warn('ChatOpenAI initialization failed:', error.message);
+        this.llm = null;
+      }
+    } else {
+      console.warn('Neither CLAUDE_API_KEY nor OPENAI_API_KEY set. LangChain service will not be available.');
       this.llm = null;
     }
 
@@ -96,12 +109,39 @@ class LangChainService {
   }
 
   /**
-   * Generate AI response using LangChain
+   * Generate AI response using Claude or LangChain
    */
   async generateResponse({ companionId, userId, conversationId, userMessage }) {
-    // Check if LangChain is available
+    // Use Claude if available
+    if (this.useClaude && claudeService.isAvailable()) {
+      // Get conversation context for Claude
+      const conversationHistory = await this.getConversationHistory(conversationId, 50);
+      const companion = await this.getCompanionDetails(companionId);
+      const user = await this.getUserDetails(userId);
+      const memories = await this.getRelevantMemories(companionId, userId, 10);
+      
+      // Build system prompt
+      const systemPrompt = this.buildSystemPrompt(companion, user, memories);
+      
+      // Build messages for Claude
+      const messages = conversationHistory.slice(-10).map(msg => ({
+        role: msg.sender_type === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }));
+      messages.push({ role: 'user', content: userMessage });
+      
+      // Generate response using Claude
+      const response = await claudeService.generateResponse(messages, systemPrompt);
+      
+      // Update conversation history
+      await this.updateConversationHistory(conversationId, userMessage, response);
+      
+      return response;
+    }
+    
+    // Fallback to OpenAI via LangChain
     if (!this.llm || !ChatOpenAI) {
-      throw new Error('LangChain components not available. Please check LangChain installation.');
+      throw new Error('No LLM available. Please set CLAUDE_API_KEY or OPENAI_API_KEY.');
     }
 
     const chainKey = `${companionId}_${userId}_${conversationId}`;

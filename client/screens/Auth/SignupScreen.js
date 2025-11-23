@@ -138,7 +138,12 @@ const SignupScreen = ({ navigation, route }) => {
           <View className="p-5">
             <TextInput
               className={`rounded-lg p-4 mb-4 text-base ${loading ? 'opacity-60' : ''}`}
-              style={{ backgroundColor: 'rgba(147, 112, 219, 0.1)', color: COLORS.deepPlum }}
+              style={{ 
+                backgroundColor: 'rgba(147, 112, 219, 0.1)', 
+                color: COLORS.deepPlum,
+                borderWidth: 0,
+                borderBottomWidth: 0
+              }}
               placeholder="Full Name"
               placeholderTextColor="rgba(95, 75, 139, 0.5)"
               value={formData.name}
@@ -146,11 +151,17 @@ const SignupScreen = ({ navigation, route }) => {
               editable={!loading}
               returnKeyType="next"
               blurOnSubmit={false}
+              underlineColorAndroid="transparent"
             />
 
             <TextInput
               className={`rounded-lg p-4 mb-4 text-base ${loading ? 'opacity-60' : ''}`}
-              style={{ backgroundColor: 'rgba(147, 112, 219, 0.1)', color: COLORS.deepPlum }}
+              style={{ 
+                backgroundColor: 'rgba(147, 112, 219, 0.1)', 
+                color: COLORS.deepPlum,
+                borderWidth: 0,
+                borderBottomWidth: 0
+              }}
               placeholder="Email"
               placeholderTextColor="rgba(95, 75, 139, 0.5)"
               keyboardType="email-address"
@@ -160,6 +171,7 @@ const SignupScreen = ({ navigation, route }) => {
               editable={!loading}
               returnKeyType="next"
               blurOnSubmit={false}
+              underlineColorAndroid="transparent"
             />
 
             <View className="flex-row items-center rounded-lg mb-4" style={{ backgroundColor: 'rgba(147, 112, 219, 0.1)' }}>

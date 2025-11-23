@@ -15,6 +15,7 @@ try {
 const pool = require('../../db/connection');
 const DatasetService = require('./datasetService');
 const aiConfig = require('../../config/aiCompanionConfig');
+const claudeService = require('../claudeService');
 
 /**
  * LangGraph-based Conversation Agent for Amora AI Companions
@@ -25,30 +26,42 @@ class LangGraphAgent {
     // Get AI configuration from centralized config
     this.aiConfig = aiConfig.getAIConfig();
     
-    // Initialize LLM with error handling
-    try {
-      // Use AI_MAX_RESPONSE_LENGTH from env if available, otherwise use OPENAI_MAX_TOKENS
-      const maxTokens = parseInt(process.env.AI_MAX_RESPONSE_LENGTH) || 
-                        parseInt(process.env.OPENAI_MAX_TOKENS) || 
-                        this.aiConfig.maxResponseLength || 
-                        300;
-      
-      // Calculate temperature based on casualness level (higher casualness = higher temperature)
-      const baseTemperature = parseFloat(process.env.OPENAI_TEMPERATURE) || 0.8;
-      const casualnessLevel = this.aiConfig.casualnessLevel || 0.8;
-      // Adjust temperature: 0.7 base + (casualness * 0.2) = range 0.7-0.9
-      const adjustedTemperature = Math.min(0.95, baseTemperature + (casualnessLevel * 0.15));
-      
-      this.llm = new ChatOpenAI({
-        openAIApiKey: process.env.OPENAI_API_KEY,
-        modelName: process.env.OPENAI_MODEL || 'gpt-4',
-        temperature: adjustedTemperature,
-        maxTokens: maxTokens,
-      });
-      
-      console.log(`🤖 LLM initialized - Max Tokens: ${maxTokens}, Temperature: ${adjustedTemperature.toFixed(2)}, Casualness: ${casualnessLevel}`);
-    } catch (error) {
-      console.warn('ChatOpenAI initialization failed:', error.message);
+    // Use Claude if available (from CLAUDE_API_KEY), otherwise fallback to OpenAI
+    this.useClaude = process.env.CLAUDE_API_KEY && claudeService.isAvailable();
+    
+    if (this.useClaude) {
+      const claudeModel = process.env.CLAUDE_MODEL || 'from env';
+      console.log(`✅ LangGraph agent will use Claude (model: ${claudeModel})`);
+      this.llm = null; // Using Claude directly, not LangChain's ChatOpenAI
+    } else if (process.env.OPENAI_API_KEY) {
+      // Fallback to OpenAI only if Claude is not available
+      try {
+        // Use AI_MAX_RESPONSE_LENGTH from env if available, otherwise use OPENAI_MAX_TOKENS
+        const maxTokens = parseInt(process.env.AI_MAX_RESPONSE_LENGTH) || 
+                          parseInt(process.env.OPENAI_MAX_TOKENS) || 
+                          this.aiConfig.maxResponseLength || 
+                          300;
+        
+        // Calculate temperature based on casualness level (higher casualness = higher temperature)
+        const baseTemperature = parseFloat(process.env.OPENAI_TEMPERATURE) || 0.8;
+        const casualnessLevel = this.aiConfig.casualnessLevel || 0.8;
+        // Adjust temperature: 0.7 base + (casualness * 0.2) = range 0.7-0.9
+        const adjustedTemperature = Math.min(0.95, baseTemperature + (casualnessLevel * 0.15));
+        
+        this.llm = new ChatOpenAI({
+          openAIApiKey: process.env.OPENAI_API_KEY,
+          modelName: process.env.OPENAI_MODEL || 'gpt-4',
+          temperature: adjustedTemperature,
+          maxTokens: maxTokens,
+        });
+        
+        console.log(`🤖 LLM initialized (OpenAI) - Max Tokens: ${maxTokens}, Temperature: ${adjustedTemperature.toFixed(2)}, Casualness: ${casualnessLevel}`);
+      } catch (error) {
+        console.warn('ChatOpenAI initialization failed:', error.message);
+        this.llm = null;
+      }
+    } else {
+      console.warn('Neither CLAUDE_API_KEY nor OPENAI_API_KEY set. LangGraph agent will not be available.');
       this.llm = null;
     }
 
@@ -538,17 +551,27 @@ Respond as ${companionName} would - naturally, authentically, like a real person
         console.log('=== END PROMPT ===\n');
       }
       
-      // Generate response using LLM
-      // Use a more natural message structure
-      const messages = [
-        ['system', systemPrompt],
-        ['human', userMessage]
-      ];
-
-      const prompt = ChatPromptTemplate.fromMessages(messages);
-      const chain = prompt.pipe(this.llm).pipe(new StringOutputParser());
+      // Generate response using Claude or OpenAI
+      let response;
       
-      const response = await chain.invoke({});
+      if (this.useClaude && claudeService.isAvailable()) {
+        // Use Claude for response generation
+        const claudeMessages = [
+          { role: 'user', content: userMessage }
+        ];
+        response = await claudeService.generateResponse(claudeMessages, systemPrompt);
+      } else if (this.llm && ChatPromptTemplate) {
+        // Use OpenAI via LangChain
+        const messages = [
+          ['system', systemPrompt],
+          ['human', userMessage]
+        ];
+        const prompt = ChatPromptTemplate.fromMessages(messages);
+        const chain = prompt.pipe(this.llm).pipe(new StringOutputParser());
+        response = await chain.invoke({});
+      } else {
+        throw new Error('No LLM available. Please set CLAUDE_API_KEY or OPENAI_API_KEY.');
+      }
       
       // Clean up response - remove any AI mentions
       let cleanedResponse = response.trim();

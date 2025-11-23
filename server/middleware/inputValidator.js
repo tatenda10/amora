@@ -60,13 +60,18 @@ function validateConversationId(conversationId) {
     return { valid: false, error: 'Conversation ID is required' };
   }
   
-  // UUID format validation
+  // Convert to string for validation
+  const idString = String(conversationId);
+  
+  // Accept both UUID format and integer format
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(conversationId)) {
-    return { valid: false, error: 'Invalid conversation ID format' };
+  const integerRegex = /^\d+$/;
+  
+  if (uuidRegex.test(idString) || integerRegex.test(idString)) {
+    return { valid: true, conversationId: idString };
   }
   
-  return { valid: true, conversationId };
+  return { valid: false, error: 'Invalid conversation ID format. Must be a number or UUID.' };
 }
 
 // Middleware to validate message input

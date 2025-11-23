@@ -2,7 +2,7 @@
   "expo": {
     "name": "Amora AI Companion",
     "slug": "amora-ai-companion",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "automatic",
@@ -12,14 +12,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#5F4B8B"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.amora.companion",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select profile pictures.",
         "NSCameraUsageDescription": "This app needs access to camera to take profile pictures.",
-        "NSUserNotificationsUsageDescription": "This app needs permission to send you notifications for new messages and matches."
+        "NSUserNotificationsUsageDescription": "This app needs permission to send you notifications for new messages and matches.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -30,14 +33,15 @@
       "package": "com.amora.companion",
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
-      "label": "Amora",
+      "usesCleartextTraffic": true,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
-        "android.permission.WAKE_LOCK"
+        "android.permission.WAKE_LOCK",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -61,10 +65,17 @@
           "photosPermission": "The app accesses your photos to let you select a profile picture.",
           "cameraPermission": "The app accesses your camera to let you take a profile picture."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static",
+            "buildReactNativeFromSource": true
+          }
+        }
       ]
     ],
     "owner": "tatenda10"
   }
 }
-
-

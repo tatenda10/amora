@@ -7,6 +7,7 @@ import { ChatProvider } from './context/ChatContext';
 import AppNavigator from './navigation/AppNavigator';
 import analyticsService from './services/analyticsService';
 import notificationService from './services/notificationService';
+import revenueCatService from './services/RevenueCatService';
 import './global.css';
 
 export default function App() {
@@ -15,16 +16,19 @@ export default function App() {
     const initializeServices = async () => {
       try {
         console.log('🚀 Initializing app services...');
-        
+
         // Initialize analytics
         await analyticsService.initialize();
-        
+
         // Track app open
         analyticsService.trackAppOpen();
-        
+
         // Initialize notifications
         await notificationService.initialize();
-        
+
+        // Initialize RevenueCat
+        await revenueCatService.init();
+
         console.log('✅ All services initialized successfully');
       } catch (error) {
         console.error('❌ Service initialization failed:', error);
