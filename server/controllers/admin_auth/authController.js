@@ -40,13 +40,13 @@ const login = async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { 
-        id: user.id, 
-        username: user.username, 
-        role: user.role 
+      {
+        id: user.id,
+        username: user.username,
+        role: user.role
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
     );
 
     // Return user info and token
@@ -96,7 +96,7 @@ const register = async (req, res) => {
       [userId, username, hashedPassword, role]
     );
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'User created successfully',
       user: {
         id: userId,
@@ -131,7 +131,7 @@ const getCurrentUser = async (req, res) => {
         lastLogin: user.last_login,
         createdAt: user.created_at
       }
-    }); 
+    });
   } catch (error) {
     console.error('Get current user error:', error);
     res.status(500).json({ message: 'Internal server error' });

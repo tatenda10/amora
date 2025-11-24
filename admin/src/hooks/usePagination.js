@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 /**
@@ -25,7 +25,7 @@ const usePagination = (url, options = {}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState(initialFilters);
-  
+
   // Pagination metadata
   const [pagination, setPagination] = useState({
     currentPage: initialPage,
@@ -34,6 +34,13 @@ const usePagination = (url, options = {}) => {
     pageSize,
     hasNext: false,
     hasPrev: false
+  });
+
+  // Use ref for dataProcessor to prevent infinite loops when it's unstable
+  const dataProcessorRef = useRef(dataProcessor);
+
+  useEffect(() => {
+    dataProcessorRef.current = dataProcessor;
   });
 
   /**
@@ -51,23 +58,23 @@ const usePagination = (url, options = {}) => {
       });
 
       // Process the response data
-      const processedData = dataProcessor(response.data.data);
+      const processedData = dataProcessorRef.current(response.data.data);
       setData(processedData);
-      
+
       // Update pagination metadata
       setPagination(prev => ({
         ...prev,
         ...response.data.pagination
       }));
-      
+
       setError(null);
     } catch (err) {
-      console.error(`Error fetching data from ${url}:`, err);
+      console.error(`Error fetching data from ${url}: `, err);
       setError('Failed to fetch data');
     } finally {
       setLoading(false);
     }
-  }, [url, pagination.currentPage, pagination.pageSize, filters, dataProcessor]);
+  }, [url, pagination.currentPage, pagination.pageSize, filters]);
 
   // Fetch data when dependencies change
   useEffect(() => {
@@ -105,13 +112,13 @@ const usePagination = (url, options = {}) => {
     data,
     loading,
     error,
-    
+
     // Pagination state
     pagination,
-    
+
     // Filter state
     filters,
-    
+
     // Actions
     goToPage,
     updateFilters,

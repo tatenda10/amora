@@ -17,7 +17,7 @@ const getImageUrl = (path) => {
 const CompanionsPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Use the custom pagination hook
   const {
     data: companions,
@@ -43,11 +43,11 @@ const CompanionsPage = () => {
       const response = await fetch(`${BASE_URL}/companions/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete companion');
       }
-      
+
       // Update the companions list after deletion
       if (companions.length === 1 && pagination.currentPage > 1) {
         // If deleting the last item on a page, go to previous page
@@ -85,9 +85,9 @@ const CompanionsPage = () => {
   }
 
   return (
-    <div>
+    <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 shrink-0">
         <h1 className="text-xl font-semibold text-gray-800">Companions</h1>
         <button
           onClick={() => navigate('/companions/add')}
@@ -99,8 +99,8 @@ const CompanionsPage = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="mb-4">
-        <SearchBar 
+      <div className="mb-4 shrink-0">
+        <SearchBar
           initialValue={searchTerm}
           onSearch={handleSearch}
           placeholder="Search companions..."
@@ -109,74 +109,78 @@ const CompanionsPage = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-gray-700">Name</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-gray-700">Age</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-gray-700">Gender</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-gray-700">Country</th>
-              <th className="px-4 py-2 text-left text-xs font-semibold tracking-wider text-gray-700">Ethnicity</th>
-              <th className="px-4 py-2 text-right text-xs font-semibold tracking-wider text-gray-700">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 text-gray-700">
-            {companions.map((companion) => (
-              <tr key={companion.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-xs">
-                  <div className="flex items-center">
-                    {companion.profile_image_url && (
-                      <img
-                        src={getImageUrl(companion.profile_image_url)}
-                        alt={companion.name}
-                        className="w-8 h-8 mr-3 object-cover rounded-full"
-                      />
-                    )}
-                    {companion.name}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-xs">{companion.age}</td>
-                <td className="px-4 py-3 text-xs">{companion.gender}</td>
-                <td className="px-4 py-3 text-xs">{companion.country}</td>
-                <td className="px-4 py-3 text-xs">{companion.ethnicity}</td>
-                <td className="px-4 py-3 text-xs">
-                  <div className="flex justify-end space-x-2">
-                    <button
-                      onClick={() => navigate(`/companions/view/${companion.id}`)}
-                      className="p-1 text-[#151529] hover:text-gray-600"
-                      title="View"
-                    >
-                      <FaEye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => navigate(`/companions/edit/${companion.id}`)}
-                      className="p-1 text-[#151529] hover:text-gray-600"
-                      title="Edit"
-                    >
-                      <FaEdit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(companion.id)}
-                      className="p-1 text-[#151529] hover:text-gray-600"
-                      title="Delete"
-                    >
-                      <FaTrash className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
+      <div className="bg-white border border-gray-200 rounded-sm overflow-hidden flex flex-col h-[calc(100vh-240px)]">
+        <div className="overflow-y-auto flex-1">
+          <table className="w-full relative border-collapse">
+            <thead className="sticky top-0 z-10 bg-white shadow-sm">
+              <tr className="border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-700 bg-gray-50/50 backdrop-blur-sm">Name</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-700 bg-gray-50/50 backdrop-blur-sm">Age</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-700 bg-gray-50/50 backdrop-blur-sm">Gender</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-700 bg-gray-50/50 backdrop-blur-sm">Country</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-700 bg-gray-50/50 backdrop-blur-sm">Ethnicity</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold tracking-wider text-gray-700 bg-gray-50/50 backdrop-blur-sm">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-gray-700">
+              {companions.map((companion) => (
+                <tr key={companion.id} className="hover:bg-gray-50 transition-colors duration-150">
+                  <td className="px-4 py-3 text-xs">
+                    <div className="flex items-center">
+                      {companion.profile_image_url && (
+                        <img
+                          src={getImageUrl(companion.profile_image_url)}
+                          alt={companion.name}
+                          className="w-8 h-8 mr-3 object-cover rounded-full ring-2 ring-white shadow-sm"
+                        />
+                      )}
+                      <span className="font-medium text-gray-900">{companion.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs">{companion.age}</td>
+                  <td className="px-4 py-3 text-xs">{companion.gender}</td>
+                  <td className="px-4 py-3 text-xs">{companion.country}</td>
+                  <td className="px-4 py-3 text-xs">{companion.ethnicity}</td>
+                  <td className="px-4 py-3 text-xs">
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => navigate(`/companions/view/${companion.id}`)}
+                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="View"
+                      >
+                        <FaEye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => navigate(`/companions/edit/${companion.id}`)}
+                        className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                        title="Edit"
+                      >
+                        <FaEdit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(companion.id)}
+                        className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Delete"
+                      >
+                        <FaTrash className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-      
+
       {/* Pagination */}
-      <Pagination 
-        pagination={pagination}
-        onPageChange={goToPage}
-        itemName="companions"
-      />
+      <div className="mt-4 shrink-0">
+        <Pagination
+          pagination={pagination}
+          onPageChange={goToPage}
+          itemName="companions"
+        />
+      </div>
     </div>
   );
 };

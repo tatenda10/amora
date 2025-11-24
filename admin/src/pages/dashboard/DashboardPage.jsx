@@ -47,17 +47,27 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       // Fetch companions for stats calculation
-      const response = await axios.get(`${BASE_URL}/companions`);
-      const companions = response.data;
+      const response = await axios.get(`${BASE_URL}/companions`, {
+        params: { limit: 1000 } // Get all companions for stats
+      });
+      const companions = response.data.data || [];
 
       // Calculate stats
       const now = new Date();
       const thirtyDaysAgo = new Date(now.setDate(now.getDate() - 30));
-      
+
       const totalImages = companions.reduce((total, companion) => {
-        const galleryCount = companion.gallery_images 
-          ? JSON.parse(companion.gallery_images).length 
-          : 0;
+        let galleryCount = 0;
+        try {
+          if (Array.isArray(companion.gallery_images)) {
+            galleryCount = companion.gallery_images.length;
+          } else if (typeof companion.gallery_images === 'string') {
+            galleryCount = JSON.parse(companion.gallery_images).length;
+          }
+        } catch (e) {
+          console.warn('Error parsing gallery images for companion:', companion.id, e);
+          galleryCount = 0;
+        }
         return total + (companion.profile_image_url ? 1 : 0) + galleryCount;
       }, 0);
 
@@ -190,4 +200,4 @@ const DashboardPage = () => {
   );
 };
 
-export default DashboardPage; 
+export default DashboardPage;
