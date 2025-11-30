@@ -318,13 +318,13 @@ class EnhancedOpenAIService {
         rawAIResponse = await claudeService.generateResponse(messages, systemPrompt);
       } else {
         // Fallback to OpenAI
-        const completion = await this.openai.chat.completions.create({
-          model: this.model,
-          messages,
-          max_tokens: this.maxTokens,
-          temperature: this.temperature,
-          user: userId.toString(),
-        });
+      const completion = await this.openai.chat.completions.create({
+        model: this.model,
+        messages,
+        max_tokens: this.maxTokens,
+        temperature: this.temperature,
+        user: userId.toString(),
+      });
         rawAIResponse = completion.choices[0].message.content;
       }
       
@@ -694,12 +694,12 @@ class EnhancedOpenAIService {
           enhancedResponse = enhancedResponse.trim();
         } else if (this.openai) {
           // Fallback to OpenAI
-          const completion = await this.openai.chat.completions.create({
-            model: this.model,
-            messages: [{ role: 'user', content: engagementPrompt }],
-            max_tokens: 80,
-            temperature: 0.7,
-          });
+        const completion = await this.openai.chat.completions.create({
+          model: this.model,
+          messages: [{ role: 'user', content: engagementPrompt }],
+          max_tokens: 80,
+          temperature: 0.7,
+        });
           enhancedResponse = completion.choices[0].message.content.trim();
         } else {
           // No AI service available, return original response
@@ -884,12 +884,12 @@ class EnhancedOpenAIService {
         }
       } else if (this.openai) {
         // Fallback to OpenAI
-        const completion = await this.openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
-          messages: [{ role: 'user', content: emotionPrompt }],
-          max_tokens: 200,
-          temperature: 0.3,
-        });
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: emotionPrompt }],
+        max_tokens: 200,
+        temperature: 0.3,
+      });
         emotionData = JSON.parse(completion.choices[0].message.content);
       } else {
         // No AI service available, return neutral state
@@ -1376,18 +1376,18 @@ class EnhancedOpenAIService {
           }
         } else if (this.openai) {
           // Fallback to OpenAI
-          const completion = await this.openai.chat.completions.create({
-            model: 'gpt-3.5-turbo',
-            messages: [{ role: 'user', content: memoryPrompt }],
-            max_tokens: 200,
-            temperature: 0.4,
-          });
-          try {
-            memories = JSON.parse(completion.choices[0].message.content);
-          } catch (parseError) {
-            console.error('Error parsing memory JSON:', parseError);
-            console.error('Raw content:', completion.choices[0].message.content);
-            return; // Skip memory processing if JSON is invalid
+        const completion = await this.openai.chat.completions.create({
+          model: 'gpt-3.5-turbo',
+          messages: [{ role: 'user', content: memoryPrompt }],
+          max_tokens: 200,
+          temperature: 0.4,
+        });
+        try {
+          memories = JSON.parse(completion.choices[0].message.content);
+        } catch (parseError) {
+          console.error('Error parsing memory JSON:', parseError);
+          console.error('Raw content:', completion.choices[0].message.content);
+          return; // Skip memory processing if JSON is invalid
           }
         } else {
           // No AI service available, skip memory extraction

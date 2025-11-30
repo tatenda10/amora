@@ -328,7 +328,8 @@ const ChatsListScreen = ({ navigation }) => {
   // Navigate to subscription screen
   const handleUpgrade = () => {
     setShowUpgradeModal(false);
-    navigation.navigate('Billing');
+    console.log('🚀 Navigating to UpgradeScreen to load RevenueCat offerings...');
+    navigation.navigate('Upgrade');
   };
 
   if (loading.conversations && conversations.length === 0) {

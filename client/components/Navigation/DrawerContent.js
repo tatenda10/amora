@@ -9,7 +9,7 @@ const DrawerContent = ({ navigation }) => {
   const menuItems = [
     { label: 'Chats', screen: 'Chats', icon: 'chatbubble-ellipses-outline' },
     { label: 'Profile', screen: 'Profile', icon: 'person-circle-outline' },
-    { label: 'Subscription', screen: 'Billing', icon: 'card-outline' },
+    { label: 'Subscription', screen: 'Upgrade', icon: 'card-outline' },
     { label: 'Notifications', screen: 'TestNotifications', icon: 'notifications-outline' },
     { label: 'Settings', screen: 'Settings', icon: 'settings-outline' },
     { label: 'Help & Support', screen: 'Support', icon: 'help-circle-outline' },

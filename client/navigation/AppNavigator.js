@@ -58,8 +58,8 @@ const AuthedDrawer = () => (
     <Drawer.Screen name="Profile" component={ProfileScreen} />
     <Drawer.Screen name="Settings" component={SettingsScreen} />
     <Drawer.Screen name="Billing" component={BillingScreen} />
+    <Drawer.Screen name="Upgrade" component={UpgradeScreen} />
     <Drawer.Screen name="TestNotifications" component={TestNotificationsScreen} />
-    {/* <Drawer.Screen name="Upgrade" component={UpgradeScreen} /> */}
     <Drawer.Screen name="Support" component={SupportScreen} />
   </Drawer.Navigator>
 );
@@ -92,6 +92,7 @@ const AppNavigator = () => {
               <Stack.Screen name="CompanionSelection" component={CompanionSelectionScreen} />
               <Stack.Screen name="Chats" component={ChatsListScreen} />
               <Stack.Screen name="Chat" component={ChatScreen} />
+              <Stack.Screen name="Upgrade" component={UpgradeScreen} />
             </Stack.Navigator>
           )
         ) : (
@@ -101,6 +102,7 @@ const AppNavigator = () => {
             <Stack.Screen name="CompanionSelection" component={CompanionSelectionScreen} />
             <Stack.Screen name="Chats" component={ChatsListScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen name="Upgrade" component={UpgradeScreen} />
           </Stack.Navigator>
         )
       ) : (

@@ -25,20 +25,20 @@ class MemoryService {
     
     // Initialize LLM with error handling - only if not using Claude
     if (!this.useClaude) {
-      try {
+    try {
         if (ChatOpenAI && process.env.OPENAI_API_KEY) {
-          this.llm = new ChatOpenAI({
-            openAIApiKey: process.env.OPENAI_API_KEY,
-            modelName: process.env.OPENAI_MODEL || 'gpt-4',
-            temperature: 0.3, // Lower temperature for more consistent memory extraction
-            maxTokens: 200,
-          });
+      this.llm = new ChatOpenAI({
+        openAIApiKey: process.env.OPENAI_API_KEY,
+        modelName: process.env.OPENAI_MODEL || 'gpt-4',
+        temperature: 0.3, // Lower temperature for more consistent memory extraction
+        maxTokens: 200,
+      });
         } else {
           this.llm = null;
         }
-      } catch (error) {
-        console.warn('ChatOpenAI initialization failed in memory service:', error.message);
-        this.llm = null;
+    } catch (error) {
+      console.warn('ChatOpenAI initialization failed in memory service:', error.message);
+      this.llm = null;
       }
     } else {
       this.llm = null; // Using Claude instead
@@ -105,33 +105,33 @@ class MemoryService {
       'No existing memories';
 
     const memoryPrompt = `Analyze this conversation and extract meaningful memories about the user.
-
+      
 User: "${userMessage}"
 AI Response: "${aiResponse}"
-
+      
 Existing memories: ${existingMemoriesText}
-
+      
 Extract 1-3 memories that are worth remembering about this user. Be generous - extract memories even for simple mentions.
-Focus on:
+      Focus on:
 - Personal preferences and interests (e.g., favorite shows, movies, hobbies)
 - Activities the user is doing (e.g., watching something, going somewhere)
-- Emotional moments or significant experiences
-- Important relationships or life events
-- Goals, dreams, or aspirations
-- Unique personality traits or quirks
+      - Emotional moments or significant experiences
+      - Important relationships or life events
+      - Goals, dreams, or aspirations
+      - Unique personality traits or quirks
 
 IMPORTANT: If the user mentions ANY specific thing (show, movie, hobby, activity, preference), extract at least 1 memory about it.
-
-Respond with ONLY a JSON array:
-[
+      
+      Respond with ONLY a JSON array:
+      [
   {
-    "type": "preference|experience|emotion|goal|fact",
-    "content": "natural phrasing of what to remember",
+          "type": "preference|experience|emotion|goal|fact",
+          "content": "natural phrasing of what to remember",
     "importance": 6-10,
-    "emotional_context": "why this is significant"
+          "emotional_context": "why this is significant"
   }
-]
-
+      ]
+      
 Always return at least 1 memory if the user mentions something specific. Minimum importance: 6.`;
 
     // Use Claude if available, otherwise use OpenAI via LangChain
@@ -287,20 +287,20 @@ Always return at least 1 memory if the user mentions something specific. Minimum
       try {
         const promptTemplate = ChatPromptTemplate.fromTemplate(memoryPrompt);
         const chain = promptTemplate.pipe(this.llm).pipe(new StringOutputParser());
-        
-        const result = await chain.invoke({
-          userMessage,
-          aiResponse,
-          existingMemories: existingMemoriesText
-        });
-        
+    
+      const result = await chain.invoke({
+        userMessage,
+        aiResponse,
+        existingMemories: existingMemoriesText
+      });
+      
         const jsonMatch = result.match(/\[[\s\S]*\]/);
         if (jsonMatch) {
           const memories = JSON.parse(jsonMatch[0]);
-          return Array.isArray(memories) ? memories : [];
+      return Array.isArray(memories) ? memories : [];
         }
         return [];
-      } catch (error) {
+    } catch (error) {
         console.error('Error extracting memories with OpenAI:', error);
         // Don't throw - gracefully return empty array
         return [];
