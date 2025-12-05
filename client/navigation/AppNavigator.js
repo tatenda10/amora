@@ -55,6 +55,7 @@ const AuthedDrawer = () => (
   >
     <Drawer.Screen name="Chats" component={ChatsListScreen} />
     <Drawer.Screen name="Chat" component={ChatScreen} />
+    <Drawer.Screen name="CompanionSelection" component={CompanionSelectionScreen} />
     <Drawer.Screen name="Profile" component={ProfileScreen} />
     <Drawer.Screen name="Settings" component={SettingsScreen} />
     <Drawer.Screen name="Billing" component={BillingScreen} />

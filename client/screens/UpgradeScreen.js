@@ -10,12 +10,14 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import revenueCatService from '../services/RevenueCatService';
+import BASE_URL from '../context/Api';
 
 const UpgradeScreen = ({ navigation }) => {
-  const { user } = useAuth();
+  const { user, refreshUserData } = useAuth();
   const [offerings, setOfferings] = useState(null);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -77,8 +79,37 @@ const UpgradeScreen = ({ navigation }) => {
     setPurchasing(true);
     try {
       const customerInfo = await revenueCatService.purchasePackage(selectedPackage);
-      if (revenueCatService.isPro(customerInfo)) {
-        Alert.alert('Success', 'Welcome to Premium!', [
+      const tier = revenueCatService.getSubscriptionTier(customerInfo);
+      
+      // Sync subscription with backend
+      try {
+        const token = await AsyncStorage.getItem('authToken');
+        const syncResponse = await fetch(`${BASE_URL}/api/subscription/sync`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (syncResponse.ok) {
+          console.log('✅ Subscription synced with backend');
+          // Refresh user data
+          if (refreshUserData) {
+            await refreshUserData();
+          }
+        }
+      } catch (syncError) {
+        console.error('Error syncing subscription:', syncError);
+        // Don't fail the purchase if sync fails
+      }
+
+      if (tier === 'premium') {
+        Alert.alert('Success', 'Welcome to Premium! Enjoy unlimited messages and companions.', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      } else if (tier === 'basic') {
+        Alert.alert('Success', 'Basic plan activated! You now have 100 messages/day and up to 3 companions.', [
           { text: 'OK', onPress: () => navigation.goBack() }
         ]);
       } else {
@@ -88,21 +119,69 @@ const UpgradeScreen = ({ navigation }) => {
       }
     } catch (error) {
       if (!error.userCancelled) {
+        // Log full error details for debugging
+        console.error('\n❌ PURCHASE ERROR DETAILS:');
+        console.error('Error Code:', error.code);
+        console.error('Readable Error Code:', error.readableErrorCode);
+        console.error('Error Message:', error.message);
+        console.error('Underlying Error:', error.underlyingErrorMessage);
+        console.error('Product ID:', selectedPackage?.product?.identifier);
+        console.error('Full Error Object:', JSON.stringify(error, null, 2));
+        
         let errorMessage = error.message || 'Failed to complete purchase';
         
         // Provide helpful message for Google Play Billing error
         if (errorMessage.includes('not configured for billing') || 
             errorMessage.includes('billing') || 
-            error.code === 'BILLING_UNAVAILABLE') {
-          errorMessage = 'This app needs to be installed from Google Play Store to make purchases.\n\n' +
-            'Please:\n' +
-            '1. Build a production version\n' +
+            error.code === 'BILLING_UNAVAILABLE' ||
+            error.readableErrorCode === 'BILLING_UNAVAILABLE') {
+          errorMessage = 'Billing service is not available.\n\n' +
+            'This usually means:\n' +
+            '• App is not installed from Google Play Store\n' +
+            '• Google Play Services is not available\n\n' +
+            'To test purchases:\n' +
+            '1. Build a production APK/AAB\n' +
             '2. Upload to Google Play Console (Internal/Alpha track)\n' +
             '3. Install from Play Store\n\n' +
             'Development builds cannot test purchases.';
         }
+        // Product not available errors
+        else if (error.code === 'PRODUCT_NOT_AVAILABLE' || 
+                 error.readableErrorCode === 'PRODUCT_NOT_AVAILABLE' ||
+                 errorMessage.toLowerCase().includes('product not available') ||
+                 errorMessage.toLowerCase().includes('not available')) {
+          errorMessage = `Product not available: ${selectedPackage?.product?.identifier}\n\n` +
+            'Possible causes:\n' +
+            '• Product ID mismatch between RevenueCat and Google Play Console\n' +
+            '• Product not published/active in Google Play Console\n' +
+            '• Product ID format issue (check for colons or special characters)\n\n' +
+            'Check:\n' +
+            '1. RevenueCat Dashboard → Products → Verify product IDs\n' +
+            '2. Google Play Console → Monetize → Products → Verify IDs match\n' +
+            '3. Ensure products are published and active';
+        }
+        // Device/user not allowed errors (License Testing)
+        else if (error.code === 'DEVELOPER_ERROR' ||
+                 error.readableErrorCode === 'DEVELOPER_ERROR' ||
+                 errorMessage.toLowerCase().includes('not allowed') ||
+                 errorMessage.toLowerCase().includes('device or user is not allowed')) {
+          errorMessage = 'Device or user is not allowed to make purchases.\n\n' +
+            'This means your Google account is not set up for testing.\n\n' +
+            'Fix this in Google Play Console:\n' +
+            '1. Go to Setup → License Testing\n' +
+            '2. Add your Google account email (the one on this device)\n' +
+            '3. Ensure app is in Internal/Alpha/Beta track\n' +
+            '4. Add yourself to testers list for that track\n' +
+            '5. Wait 2-24 hours for changes to propagate\n\n' +
+            'Also verify:\n' +
+            '• Same Google account is signed in on device\n' +
+            '• App installed from Play Store (not side-loaded)\n' +
+            '• Products are active in Play Console';
+        }
         
         Alert.alert('Purchase Error', errorMessage);
+      } else {
+        console.log('ℹ️ User cancelled purchase');
       }
     } finally {
       setPurchasing(false);
@@ -229,7 +308,7 @@ const UpgradeScreen = ({ navigation }) => {
                 
                 return (
                   <View 
-                    key={pack.identifier}
+                    key={pack.product.identifier}
                     className={`mb-4 rounded-lg p-5 border-2 ${
                       isSelected
                         ? 'bg-purple-50 border-purple-500' 

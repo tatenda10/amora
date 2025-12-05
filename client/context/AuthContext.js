@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService from '../services/authService';
 import BASE_URL from './Api';
 import analyticsService from '../services/analyticsService';
+import revenueCatService from '../services/RevenueCatService';
 
 const AuthContext = createContext(null);
 
@@ -58,6 +59,48 @@ export const AuthProvider = ({ children }) => {
             // Set user ID for analytics
             if (data.user?.id) {
               analyticsService.setUserId(data.user.id);
+              // Set user ID in RevenueCat so webhooks contain our UUID
+              // This also fetches purchases from other devices
+              try {
+                const customerInfo = await revenueCatService.logIn(data.user.id);
+                
+                // If user has active subscriptions, sync with backend
+                // This handles cross-device scenarios where purchase was made on another device
+                const subscriptionTier = revenueCatService.getSubscriptionTier(customerInfo);
+                if (subscriptionTier !== 'free') {
+                  console.log(`🔄 Syncing subscription from RevenueCat (tier: ${subscriptionTier})`);
+                  try {
+                    const token = await AsyncStorage.getItem('authToken');
+                    const syncResponse = await fetch(`${BASE_URL}/api/subscription/sync`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                      },
+                    });
+                    
+                    if (syncResponse.ok) {
+                      console.log('✅ Subscription synced with backend after login');
+                      // Refresh user data to get updated subscription info
+                      const refreshResponse = await fetch(`${BASE_URL}/user/me`, {
+                        headers: {
+                          'Authorization': `Bearer ${token}`,
+                        },
+                      });
+                      if (refreshResponse.ok) {
+                        const refreshData = await refreshResponse.json();
+                        setUser(refreshData.user);
+                      }
+                    }
+                  } catch (syncError) {
+                    console.error('Error syncing subscription after login:', syncError);
+                    // Don't fail login if sync fails
+                  }
+                }
+              } catch (rcError) {
+                console.error('Error setting RevenueCat user ID:', rcError);
+                // Don't fail auth if RevenueCat fails
+              }
             }
           } else {
             console.log('❌ Token invalid, clearing storage');
@@ -94,6 +137,51 @@ export const AuthProvider = ({ children }) => {
         // Login successful
         setUser(result.user);
         await AsyncStorage.setItem('authToken', result.token);
+        
+        // Set user ID in RevenueCat so webhooks contain our UUID
+        // This also fetches purchases from other devices
+        if (result.user?.id) {
+          try {
+            const customerInfo = await revenueCatService.logIn(result.user.id);
+            
+            // If user has active subscriptions, sync with backend
+            // This handles cross-device scenarios where purchase was made on another device
+            const subscriptionTier = revenueCatService.getSubscriptionTier(customerInfo);
+            if (subscriptionTier !== 'free') {
+              console.log(`🔄 Syncing subscription from RevenueCat (tier: ${subscriptionTier})`);
+              try {
+                const syncResponse = await fetch(`${BASE_URL}/api/subscription/sync`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${result.token}`,
+                  },
+                });
+                
+                if (syncResponse.ok) {
+                  console.log('✅ Subscription synced with backend after login');
+                  // Refresh user data to get updated subscription info
+                  const refreshResponse = await fetch(`${BASE_URL}/user/me`, {
+                    headers: {
+                      'Authorization': `Bearer ${result.token}`,
+                    },
+                  });
+                  if (refreshResponse.ok) {
+                    const refreshData = await refreshResponse.json();
+                    setUser(refreshData.user);
+                  }
+                }
+              } catch (syncError) {
+                console.error('Error syncing subscription after login:', syncError);
+                // Don't fail login if sync fails
+              }
+            }
+          } catch (rcError) {
+            console.error('Error setting RevenueCat user ID:', rcError);
+            // Don't fail login if RevenueCat fails
+          }
+        }
+        
         return true;
       } else {
         // Login failed
@@ -156,6 +244,51 @@ export const AuthProvider = ({ children }) => {
       if (result.success) {
         setUser(result.user);
         await AsyncStorage.setItem('authToken', result.token);
+        
+        // Set user ID in RevenueCat so webhooks contain our UUID
+        // This also fetches purchases from other devices
+        if (result.user?.id) {
+          try {
+            const customerInfo = await revenueCatService.logIn(result.user.id);
+            
+            // If user has active subscriptions, sync with backend
+            // This handles cross-device scenarios where purchase was made on another device
+            const subscriptionTier = revenueCatService.getSubscriptionTier(customerInfo);
+            if (subscriptionTier !== 'free') {
+              console.log(`🔄 Syncing subscription from RevenueCat (tier: ${subscriptionTier})`);
+              try {
+                const syncResponse = await fetch(`${BASE_URL}/api/subscription/sync`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${result.token}`,
+                  },
+                });
+                
+                if (syncResponse.ok) {
+                  console.log('✅ Subscription synced with backend after login');
+                  // Refresh user data to get updated subscription info
+                  const refreshResponse = await fetch(`${BASE_URL}/user/me`, {
+                    headers: {
+                      'Authorization': `Bearer ${result.token}`,
+                    },
+                  });
+                  if (refreshResponse.ok) {
+                    const refreshData = await refreshResponse.json();
+                    setUser(refreshData.user);
+                  }
+                }
+              } catch (syncError) {
+                console.error('Error syncing subscription after login:', syncError);
+                // Don't fail login if sync fails
+              }
+            }
+          } catch (rcError) {
+            console.error('Error setting RevenueCat user ID:', rcError);
+            // Don't fail login if RevenueCat fails
+          }
+        }
+        
         return true;
       } else {
         setError(result.error);
@@ -172,6 +305,14 @@ export const AuthProvider = ({ children }) => {
   const signOut = async () => {
     try {
       setLoading(true);
+      
+      // Log out from RevenueCat
+      try {
+        await revenueCatService.logOut();
+      } catch (rcError) {
+        console.error('Error logging out from RevenueCat:', rcError);
+        // Don't fail sign out if RevenueCat fails
+      }
       
       await authService.signOut();
       setUser(null);

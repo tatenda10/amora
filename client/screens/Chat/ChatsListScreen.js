@@ -312,10 +312,85 @@ const ChatsListScreen = ({ navigation }) => {
   };
 
   // Handle add companion click
-  const handleAddCompanion = () => {
+  const handleAddCompanion = async () => {
     console.log('Add companion clicked');
-    setUpgradeFeature('Add Another Companion');
-    setShowUpgradeModal(true);
+    
+    try {
+      // Check subscription status
+      const token = await AsyncStorage.getItem('authToken');
+      const subscriptionResponse = await fetch(`${BASE_URL}/api/subscription/status`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!subscriptionResponse.ok) {
+        // Not subscribed - show upgrade message
+        Alert.alert(
+          'Subscription Required',
+          'Adding multiple companions is a premium feature. Upgrade to Basic or Premium to add more companions.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Upgrade', onPress: () => navigation.navigate('Upgrade') }
+          ]
+        );
+        return;
+      }
+
+      const subscriptionData = await subscriptionResponse.json();
+      const subscription = subscriptionData.subscription;
+      const limits = subscriptionData.limits;
+
+      // Check if user is subscribed
+      if (!subscription.isActive || (subscription.tier !== 'basic' && subscription.tier !== 'premium')) {
+        Alert.alert(
+          'Subscription Required',
+          'Adding multiple companions is a premium feature. Upgrade to Basic or Premium to add more companions.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Upgrade', onPress: () => navigation.navigate('Upgrade') }
+          ]
+        );
+        return;
+      }
+
+      // Check companion limits
+      const currentCount = limits.companions.current;
+      const limit = limits.companions.limit;
+      const remaining = limits.companions.remaining;
+
+      // Premium users have unlimited
+      if (subscription.tier === 'premium') {
+        // Navigate to companion selection with grid view
+        navigation.navigate('CompanionSelection', { mode: 'add', viewMode: 'grid' });
+        return;
+      }
+
+      // Basic users: check if they can add more (max 3)
+      if (subscription.tier === 'basic') {
+        if (currentCount >= 3) {
+          Alert.alert(
+            'Companion Limit Reached',
+            'Basic plan allows up to 3 companions. Upgrade to Premium for unlimited companions.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Upgrade', onPress: () => navigation.navigate('Upgrade') }
+            ]
+          );
+          return;
+        }
+
+        // Can add more - navigate to grid view
+        navigation.navigate('CompanionSelection', { mode: 'add', viewMode: 'grid' });
+        return;
+      }
+
+      // Fallback - shouldn't reach here
+      Alert.alert('Error', 'Unable to check subscription status');
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+      Alert.alert('Error', 'Failed to check subscription status. Please try again.');
+    }
   };
 
   // Handle change companion click

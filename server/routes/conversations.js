@@ -19,6 +19,7 @@ const {
 } = require('../controllers/conversations/handlers/sendMessageLangChain');
 const { authenticateToken } = require('../middleware/authMiddleware');
 const { validateMessageInput, validateConversationIdParam } = require('../middleware/inputValidator');
+const { checkMessageLimit } = require('../middleware/subscriptionMiddleware');
 
 // All routes are protected with JWT authentication
 router.use(authenticateToken);
@@ -128,7 +129,7 @@ router.get('/:conversation_id', validateConversationIdParam, getConversationLang
  * @desc    Send a message in a conversation (now uses LangChain/LangGraph)
  * @access  Private
  */
-router.post('/:conversation_id/messages', validateConversationIdParam, validateMessageInput, sendMessageLangChain);
+router.post('/:conversation_id/messages', validateConversationIdParam, validateMessageInput, checkMessageLimit, sendMessageLangChain);
 
 /**
  * @route   POST /api/conversations/:conversation_id/read
@@ -154,7 +155,7 @@ router.delete('/:conversation_id', deleteConversation);
  * @param   {string} [message_type] - Message type (default: 'text')
  * @param   {boolean} [use_langgraph] - Use LangGraph agent (default: true)
  */
-router.post('/:conversation_id/messages/langchain', validateConversationIdParam, validateMessageInput, sendMessageLangChain);
+router.post('/:conversation_id/messages/langchain', validateConversationIdParam, validateMessageInput, checkMessageLimit, sendMessageLangChain);
 
 /**
  * @route   GET /api/conversations/:conversation_id/langchain

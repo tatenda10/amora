@@ -263,7 +263,7 @@ const getCurrentUser = async (req, res) => {
     // Get current user
     
     const [users] = await pool.execute(
-      'SELECT id, email, name, profile_image_url, role, last_login, created_at, auth_provider, profile_completed FROM users WHERE id = ?',
+      'SELECT id, email, name, profile_image_url, role, subscription_tier, subscription_status, subscription_end_date, last_login, created_at, auth_provider, profile_completed FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -297,6 +297,9 @@ const getCurrentUser = async (req, res) => {
         name: user.name,
         profile_image_url: user.profile_image_url,
         role: user.role,
+        subscription_tier: user.subscription_tier || 'free',
+        subscription_status: user.subscription_status,
+        subscription_end_date: user.subscription_end_date,
         lastLogin: user.last_login,
         createdAt: user.created_at,
         auth_provider: user.auth_provider,
